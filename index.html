@@ -1520,16 +1520,40 @@ function openShare(e, from) {
     c.beginPath(); c.arc(x, y, (i % 3) * .7 + .8, 0, 7); c.fill();
   }
   c.globalAlpha = 1;
-  // 星星：实际星域位置 + 星等；这片光放大带环
+  // 星星：与相册星图完全同源——同螺旋位置、同就近生长连线、同星等；这片光放大带环
   const nowMs = Date.now();
+  const posC = new Map();
   for (const [lens, list] of Object.entries(byLens)) {
     const a = ANCHORS[lens] || [50, 45];
     list.forEach((x, k) => {
       const ang = k * 2.4 + lens.length;
       let rad = k === 0 ? 0 : 3.5 + 4.2 * Math.sqrt(k);
       if (rad > 13.5) rad = 13.5 - (k % 4) * 1.1;
-      const sx = MX(Math.min(92, Math.max(5, a[0] + Math.cos(ang) * rad * 1.2)));
-      const sy = MY(Math.min(88, Math.max(4, a[1] + Math.sin(ang) * rad)));
+      posC.set(x, [
+        MX(Math.min(92, Math.max(5, a[0] + Math.cos(ang) * rad * 1.2))),
+        MY(Math.min(88, Math.max(4, a[1] + Math.sin(ang) * rad))),
+      ]);
+    });
+  }
+  // 星座连线（同视角就近生长，极淡，画在星之下）
+  c.strokeStyle = 'rgba(240,194,127,.13)'; c.lineWidth = 1; c.lineCap = 'round';
+  for (const list of Object.values(byLens)) {
+    if (list.length < 2) continue;
+    for (let k = 1; k < list.length; k++) {
+      const p = posC.get(list[k]);
+      let best = 0, bd = Infinity;
+      for (let j = 0; j < k; j++) {
+        const q = posC.get(list[j]);
+        const d = (p[0] - q[0]) ** 2 + (p[1] - q[1]) ** 2;
+        if (d < bd) { bd = d; best = j; }
+      }
+      const q = posC.get(list[best]);
+      c.beginPath(); c.moveTo(q[0], q[1]); c.lineTo(p[0], p[1]); c.stroke();
+    }
+  }
+  for (const list of Object.values(byLens)) {
+    list.forEach(x => {
+      const [sx, sy] = posC.get(x);
       const mood = MOODS.find(m => m.id === x.mood);
       const fresh = Math.max(0, 1 - (nowMs - new Date(x.date + 'T00:00:00')) / 86400000 / 75);
       const isMe = x === e;
