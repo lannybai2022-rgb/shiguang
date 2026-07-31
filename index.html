@@ -1,0 +1,1546 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>拾光 · 找好处练习（原型）</title>
+<style>
+  :root {
+    --bg-top: #070b1c;
+    --bg-mid: #10152e;
+    --bg-low: #1a1f3d;
+    --warm: #f0c27f;
+    --warm-deep: #d9a45e;
+    --text: #f2ede4;
+    --text-dim: rgba(242, 237, 228, 0.6);
+    --text-faint: rgba(242, 237, 228, 0.38);
+    --card: rgba(255, 255, 255, 0.05);
+    --card-border: rgba(255, 255, 255, 0.09);
+    --card-active: rgba(240, 194, 127, 0.13);
+    --kai: "Kaiti SC", "STKaiti", "KaiTi", serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-mid) 58%, var(--bg-low) 100%);
+    color: var(--text);
+    min-height: 100dvh;
+    display: flex; justify-content: center;
+    overflow-x: hidden;
+  }
+
+  /* ============ 氛围层：星空 / 极光 / 流萤 ============ */
+  #bg-stars { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+  .aurora { position: fixed; z-index: 0; pointer-events: none; border-radius: 50%; filter: blur(70px); opacity: .16; }
+  .aurora.a1 { width: 70vmax; height: 46vmax; left: -25vmax; top: -14vmax;
+    background: radial-gradient(closest-side, #f0c27f, transparent 70%);
+    animation: drift1 46s ease-in-out infinite alternate; }
+  .aurora.a2 { width: 62vmax; height: 44vmax; right: -28vmax; bottom: -16vmax;
+    background: radial-gradient(closest-side, #7f9df0, transparent 70%);
+    animation: drift2 58s ease-in-out infinite alternate; opacity: .1; }
+  @keyframes drift1 { to { transform: translate(9vmax, 7vmax) scale(1.12); } }
+  @keyframes drift2 { to { transform: translate(-8vmax, -6vmax) scale(1.08); } }
+  .firefly { position: fixed; z-index: 0; width: 4px; height: 4px; border-radius: 50%;
+    background: var(--warm); filter: blur(1px); pointer-events: none; opacity: 0;
+    box-shadow: 0 0 8px 2px rgba(240,194,127,.5);
+    animation: fly var(--dur, 16s) ease-in-out var(--delay, 0s) infinite; }
+  @keyframes fly {
+    0%   { opacity: 0; transform: translate(0, 0); }
+    12%  { opacity: .8; }
+    45%  { opacity: .35; transform: translate(var(--dx1, 40px), var(--dy1, -60px)); }
+    70%  { opacity: .75; }
+    100% { opacity: 0; transform: translate(var(--dx2, -30px), var(--dy2, -130px)); }
+  }
+
+  #app {
+    width: 100%; max-width: 430px; min-height: 100dvh;
+    padding: max(20px, env(safe-area-inset-top)) 22px calc(28px + env(safe-area-inset-bottom));
+    display: flex; flex-direction: column; position: relative; z-index: 1;
+  }
+
+  /* ============ 屏幕切换 + 错落入场 ============ */
+  .screen { display: none; flex-direction: column; flex: 1; }
+  .screen.active { display: flex; }
+  .screen.active [data-e] { opacity: 0; animation: rise .8s cubic-bezier(.2,.7,.3,1) both; animation-delay: calc(var(--i, 0) * 110ms); }
+  @keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+
+  .brand { font-size: 13px; letter-spacing: 4px; color: var(--text-faint); display: flex; align-items: center; gap: 7px; }
+  .brand::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--warm);
+    box-shadow: 0 0 10px 2px rgba(240,194,127,.5); animation: breathe 4.5s ease-in-out infinite; }
+  .brand-sub { margin-left: 8px; letter-spacing: 1.5px; font-size: 11.5px; color: var(--text-faint); }
+
+  /* ---------- 每日轻语 + 理念页 ---------- */
+  .whisper-wrap { margin-bottom: 6px; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 0 12px; text-align: center; }
+  .whisper { font-family: var(--kai); color: var(--text-dim); font-size: 15px; line-height: 2; }
+  .whisper::before, .whisper::after { content: "·"; color: rgba(240,194,127,.5); margin: 0 10px; }
+  .why-link { background: none; border: none; color: var(--text-faint); font-size: 12.5px;
+    cursor: pointer; font-family: inherit; padding: 6px 10px; transition: color .3s; }
+  .why-link:active { color: var(--warm); }
+  .why-body { margin-top: 20px; display: flex; flex-direction: column; gap: 18px; padding-bottom: 24px; }
+  .why-body p { color: var(--text-dim); font-size: 15px; line-height: 2.05; }
+  .why-body b { color: var(--warm); font-weight: normal; }
+
+  /* ---------- 旧光回响 + 分享 ---------- */
+  .echo-card { background: var(--card); border: 1px solid var(--card-border); border-radius: 16px;
+    padding: 14px 18px; margin-top: 16px; }
+  .echo-card .eq { font-size: 13px; color: var(--text-faint); }
+  .echo-card .et { font-family: var(--kai); font-size: 16px; line-height: 1.8; margin-top: 6px; color: var(--text-dim); }
+  .share-preview { display: flex; justify-content: center; margin-top: 18px; }
+  .share-preview img { width: 62%; max-width: 240px; border-radius: 14px;
+    border: 1px solid var(--card-border); box-shadow: 0 10px 40px -10px rgba(0,0,0,.6); }
+  .share-mini { background: none; border: none; color: var(--text-faint); font-size: 13px;
+    cursor: pointer; font-family: inherit; padding: 8px 0 0; display: block; transition: color .3s; }
+  .share-mini:active { color: var(--warm); }
+  .share-status { min-height: 22px; text-align: center; font-size: 13px; color: var(--warm);
+    line-height: 1.7; animation: rise .4s both; }
+
+  /* ---------- 牵挂卡 + 正向计数 ---------- */
+  .care-card { background: var(--card); border: 1px solid rgba(240,194,127,.35); border-radius: 18px;
+    padding: 18px 20px; margin-top: 24px; box-shadow: 0 0 34px -12px rgba(240,194,127,.35); }
+  .care-card .ct { color: var(--text-dim); font-size: 14.5px; line-height: 1.9; }
+  .care-card .ct + .ct { margin-top: 10px; }
+  .care-card .ct b { color: var(--warm); font-weight: 600; }
+  .care-ok { margin-top: 14px; width: 100%; border: none; border-radius: 12px; padding: 11px;
+    background: rgba(255,255,255,.07); color: var(--text-dim); font-size: 14px; font-family: inherit;
+    cursor: pointer; transition: transform .15s; }
+  .care-ok:active { transform: scale(.97); }
+  .album-recent { color: var(--text-dim); font-size: 13px; margin-top: 6px; }
+  .album-recent b { color: var(--warm); font-weight: normal; }
+  @keyframes breathe { 0%,100% { opacity: .55; transform: scale(1); } 50% { opacity: 1; transform: scale(1.25); } }
+
+  .topbar { display: flex; align-items: center; min-height: 34px; margin-bottom: 6px; }
+  .back-btn { background: none; border: none; color: var(--text-dim); font-size: 15px;
+    padding: 6px 12px 6px 0; cursor: pointer; font-family: inherit; transition: color .3s; }
+  .back-btn:active { color: var(--text); }
+  .step-dots { margin-left: auto; display: flex; gap: 6px; }
+  .step-dots i { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,.16); transition: background .4s; }
+  .step-dots i.on { background: var(--warm); box-shadow: 0 0 6px 1px rgba(240,194,127,.5); }
+
+  h1.greeting { font-size: 27px; font-weight: 600; letter-spacing: .5px; margin-top: 30px; }
+  .sub { color: var(--text-dim); font-size: 15px; line-height: 1.85; margin-top: 12px; }
+  .question { font-size: 21px; font-weight: 600; line-height: 1.6; margin-top: 16px; }
+  .ack { color: var(--warm); font-size: 15px; line-height: 1.8; margin-top: 14px; font-family: var(--kai); }
+
+  .btn { border: none; border-radius: 16px; padding: 15px 18px; font-size: 16px; font-family: inherit;
+    cursor: pointer; transition: transform .15s cubic-bezier(.3,1.6,.6,1), box-shadow .3s; width: 100%; }
+  .btn:active { transform: scale(.96); }
+  .btn-primary { background: linear-gradient(160deg, #f5cf92, var(--warm-deep)); color: #2a2412; font-weight: 600;
+    box-shadow: 0 4px 22px -6px rgba(240,194,127,.45); }
+  .btn-primary:not(:disabled) { animation: btnGlow 5s ease-in-out infinite; }
+  @keyframes btnGlow { 0%,100% { box-shadow: 0 4px 18px -6px rgba(240,194,127,.35); } 50% { box-shadow: 0 4px 30px -4px rgba(240,194,127,.6); } }
+  .btn-primary:disabled { background: rgba(240,194,127,.16); color: rgba(242,237,228,.35); box-shadow: none; cursor: default; }
+  .btn-ghost { background: transparent; color: var(--text-dim); font-size: 14px; padding: 12px; }
+  .btn-ghost:active { color: var(--text); }
+
+  /* ============ 落地：心情光球 ============ */
+  .mood-orbs { display: flex; justify-content: space-between; margin-top: 44px; padding: 0 2px; }
+  .mood-orb { background: none; border: none; cursor: pointer; font-family: inherit;
+    display: flex; flex-direction: column; align-items: center; gap: 12px; width: 60px;
+    transition: opacity .5s, transform .5s; }
+  .mood-orb .ball { position: relative; width: 46px; height: 46px; border-radius: 50%;
+    background: radial-gradient(circle at 34% 30%, rgba(255,255,255,.5), var(--c) 55%, color-mix(in srgb, var(--c) 60%, #000) 130%);
+    box-shadow: 0 0 18px 1px color-mix(in srgb, var(--c) 55%, transparent);
+    animation: orbBreathe 5.2s ease-in-out var(--d, 0s) infinite; transition: transform .3s; }
+  @keyframes orbBreathe { 0%,100% { transform: scale(1); filter: brightness(.92); } 50% { transform: scale(1.07); filter: brightness(1.12); } }
+  .mood-orb span { font-size: 13px; color: var(--text-dim); transition: color .3s; }
+  .mood-orb:active .ball { transform: scale(.9); }
+  .mood-orb.picked .ball { animation: none; transform: scale(1.14); box-shadow: 0 0 30px 6px color-mix(in srgb, var(--c) 70%, transparent); }
+  .mood-orb.picked span { color: var(--text); }
+  .mood-orb.picked .ball::after { content: ""; position: absolute; inset: -4px; border-radius: 50%;
+    border: 1.5px solid color-mix(in srgb, var(--c) 80%, #fff); animation: ripple .9s ease-out forwards; }
+  @keyframes ripple { from { transform: scale(1); opacity: .9; } to { transform: scale(2.4); opacity: 0; } }
+  .mood-orbs.chosen .mood-orb:not(.picked) { opacity: .22; transform: scale(.92); }
+
+  .home-foot { margin-top: auto; padding-top: 26px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  /* 快输直达：第二层顶部的直通口——心里已有那句的人，在分流点就走直路 */
+  .quick-write { margin: 18px 0 4px; display: flex; flex-direction: column; gap: 9px; }
+  .qw-hint { color: var(--text-faint); font-size: 12.5px; }
+  .qw-row { display: flex; gap: 8px; align-items: center; }
+  .qw-row input { flex: 1; min-width: 0; background: var(--card); border: 1px solid var(--card-border);
+    border-radius: 14px; padding: 12px 14px; color: var(--text); font-size: 15px; outline: none; font-family: inherit; }
+  .qw-row input:focus { border-color: rgba(240,194,127,.45); }
+  .qw-row input::placeholder { color: var(--text-faint); }
+  .qw-mic { width: 44px; height: 44px; flex: none; border-radius: 50%; background: var(--card);
+    border: 1px solid var(--card-border); cursor: pointer; display: none; align-items: center; justify-content: center; padding: 0; }
+  .qw-mic.show { display: flex; }
+  .qw-mic.rec { border-color: rgba(240,194,127,.7); box-shadow: 0 0 14px -2px rgba(240,194,127,.5); }
+  .qw-mic .lic { height: 20px; }
+  .qw-save { display: none; }
+  .qw-save.show { display: block; animation: rise .35s both; }
+  #find-ack:empty { display: none; }
+
+  /* 理念页题眼：这几个字自己在发光 */
+  .lumen { color: var(--warm); font-family: var(--kai); font-weight: 600; white-space: nowrap;
+    text-shadow: 0 0 10px rgba(240,194,127,.6), 0 0 26px rgba(240,194,127,.28); }
+  /* 首页星光：我的光直接亮在首页夜空里——不装盒子，天空没有边框 */
+  .mini-sky { position: relative; display: block; width: 100%; height: 132px; margin: 2px 0 0;
+    background: transparent; border: none; cursor: pointer; overflow: visible; padding: 0; }
+  .mini-sky .ms-star { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: #f5e9cf;
+    box-shadow: 0 0 15px 5px var(--halo, rgba(240,194,127,.55));
+    animation: starFloat var(--fd, 9s) ease-in-out infinite, twinkle var(--td, 3.4s) ease-in-out var(--tdel, 0s) infinite; }
+  .mini-sky .ms-star.tonight { width: 10px; height: 10px; }
+  .mini-sky .ms-star.tonight::after { content: ""; position: absolute; inset: -6px; border-radius: 50%;
+    border: 1px solid rgba(240,194,127,.7); animation: tonightRing 2.6s ease-out infinite; }
+  .mini-sky .ms-dust { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: #dbe3ff; opacity: .22; }
+  /* 星云：最近的心情晕染成的云，垫在星光之下 */
+  .mini-sky .ms-nebula { position: absolute; width: 48%; aspect-ratio: 1.55; border-radius: 50%;
+    transform: translate(-50%, -50%); pointer-events: none;
+    background: radial-gradient(ellipse closest-side, var(--nc), transparent 72%); }
+  .mini-sky .ms-count { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%);
+    font-size: 13px; color: var(--text-dim); white-space: nowrap; }
+  .mini-sky .ms-count .ms-spark { color: var(--warm); }
+  .mini-sky .ms-count .n { color: var(--warm); font-family: var(--kai); font-size: 19px; margin: 0 1px;
+    text-shadow: 0 0 10px rgba(240,194,127,.55); }
+  .mini-sky .ms-empty { position: absolute; inset: 0 0 18px; display: flex; align-items: center; justify-content: center;
+    color: var(--text-faint); font-size: 13px; font-family: var(--kai); }
+  .link-album { background: var(--card); border: 1px solid var(--card-border); border-radius: 99px;
+    color: var(--text-dim); font-size: 14px; cursor: pointer; font-family: inherit; padding: 10px 22px;
+    display: flex; align-items: center; gap: 8px; transition: border-color .3s, color .3s; }
+  .link-album:active { border-color: rgba(240,194,127,.4); color: var(--text); }
+  .link-album .spark { color: var(--warm); animation: breathe 4s ease-in-out infinite; }
+  .link-album .n { color: var(--warm); }
+  .tiny-note { color: var(--text-faint); font-size: 11.5px; line-height: 1.7; text-align: center; }
+  .presence { color: var(--text-faint); font-size: 12.5px; font-family: var(--kai); }
+
+  /* ============ 小事提醒卡 ============ */
+  .deed-card { background: linear-gradient(135deg, rgba(240,194,127,.13), rgba(240,194,127,.03));
+    border: 1px solid rgba(240,194,127,.28); border-radius: 18px; padding: 16px 18px; margin-top: 24px;
+    box-shadow: 0 0 30px -12px rgba(240,194,127,.3); }
+  .deed-card .q { font-size: 13.5px; color: var(--text-dim); }
+  .deed-card .t { font-size: 16px; margin-top: 7px; font-weight: 600; font-family: var(--kai); }
+  .deed-card .row { display: flex; gap: 8px; margin-top: 14px; }
+  .deed-card .row button { flex: 1; border: none; border-radius: 12px; padding: 10px 4px; font-size: 13px;
+    font-family: inherit; cursor: pointer; transition: transform .15s; }
+  .deed-card .row button:active { transform: scale(.95); }
+  .deed-done { background: linear-gradient(160deg, #f5cf92, var(--warm-deep)); color: #2a2412; font-weight: 600; }
+  .deed-later, .deed-swap { background: rgba(255,255,255,.07); color: var(--text-dim); }
+
+  /* ============ 选视角 ============ */
+  .lens-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 24px; }
+  .lens-grid .lens-card:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  .lens-card { background: var(--card); border: 1px solid var(--card-border); border-radius: 18px;
+    padding: 18px 15px; cursor: pointer; text-align: left; color: var(--text); font-family: inherit;
+    display: flex; flex-direction: column; gap: 8px; position: relative; overflow: hidden;
+    transition: border-color .35s, background .35s, transform .2s, box-shadow .35s; }
+  .lens-card::after { content: ""; position: absolute; inset: 0; border-radius: inherit; opacity: 0;
+    background: radial-gradient(circle at 50% 0%, rgba(240,194,127,.16), transparent 70%); transition: opacity .35s; }
+  .lens-card:active { transform: scale(.965); }
+  .lens-card.last { border-color: rgba(240,194,127,.45); background: var(--card-active); }
+  .lens-card.going { border-color: rgba(240,194,127,.7); box-shadow: 0 0 26px -4px rgba(240,194,127,.45); }
+  .lens-card.going::after { opacity: 1; }
+  .lens-grid.chosen .lens-card:not(.going) { opacity: .3; }
+  .lens-card .ico { height: 27px; }
+  .lic { width: 27px; height: 27px; stroke: var(--warm); fill: none; stroke-width: 1.5;
+    stroke-linecap: round; stroke-linejoin: round;
+    filter: drop-shadow(0 0 5px rgba(240,194,127,.4)); }
+  .mico .lic { width: 14px; height: 14px; filter: none; vertical-align: -3px; }
+  .dic .lic { width: 16px; height: 16px; vertical-align: -3px; }
+  .mic-btn .lic { width: 18px; height: 18px; stroke: currentColor; filter: none; }
+  .lens-card .name { font-size: 15px; font-weight: 600; }
+  .lens-card .hint { font-size: 12px; color: var(--text-faint); line-height: 1.5; }
+  .lens-card .tag { font-size: 11px; color: var(--warm); }
+
+  /* ============ 找 ============ */
+  .chips { display: flex; flex-direction: column; gap: 10px; margin-top: 22px; }
+  .chip { background: var(--card); border: 1px solid var(--card-border); border-radius: 15px;
+    padding: 13px 16px; font-size: 15px; color: var(--text); cursor: pointer; text-align: left;
+    font-family: inherit; line-height: 1.55; position: relative;
+    transition: border-color .3s, background .3s, transform .15s, box-shadow .3s; }
+  .chip:active { transform: scale(.975); }
+  .chip.picked { border-color: rgba(240,194,127,.55); background: var(--card-active);
+    box-shadow: 0 0 20px -6px rgba(240,194,127,.4); }
+  .chip.picked::after { content: "✶"; position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+    color: var(--warm); font-size: 13px; animation: rise .4s both; }
+  .input-wrap { position: relative; margin-top: 14px; }
+  .input-wrap textarea { width: 100%; background: var(--card); border: 1px solid var(--card-border);
+    border-radius: 15px; color: var(--text); font-family: inherit; font-size: 15px; line-height: 1.6;
+    padding: 13px 16px; resize: none; height: 84px; outline: none; transition: border-color .35s, box-shadow .35s; }
+  .input-wrap textarea:focus { border-color: rgba(240,194,127,.45); box-shadow: 0 0 24px -8px rgba(240,194,127,.35); }
+  .input-wrap textarea::placeholder { color: var(--text-faint); }
+  .voice-btn { display: none; align-self: center; align-items: center; gap: 8px;
+    background: var(--card); border: 1px solid var(--card-border); border-radius: 99px;
+    padding: 11px 22px; color: var(--text-dim); font-size: 14px; font-family: inherit;
+    cursor: pointer; margin-top: 6px; transition: border-color .3s, color .3s, transform .15s; }
+  .voice-btn:active { transform: scale(.95); }
+  .voice-btn.show { display: inline-flex; }
+  .voice-btn.rec { border-color: rgba(240,127,127,.5); color: #f0a0a0; animation: micPulse 1.2s infinite; }
+  .voice-btn .lic { width: 17px; height: 17px; stroke: currentColor; filter: none; }
+  @keyframes micPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(240,127,127,.35); } 50% { box-shadow: 0 0 0 9px rgba(240,127,127,0); } }
+  .counter { font-size: 12px; color: var(--text-faint); text-align: right; margin-top: 6px; min-height: 18px; transition: color .3s; }
+  .counter.warn { color: var(--warm); }
+  .find-actions { margin-top: auto; padding-top: 20px; display: flex; flex-direction: column; gap: 8px; }
+
+  /* ============ 收：仪式 ============ */
+  #screen-save { justify-content: center; align-items: center; text-align: center; }
+  /* 收的仪式：星云托底——星定格在云上，不再悬在空底色里 */
+  .stage-nebula { position: absolute; border-radius: 50%; pointer-events: none;
+    animation: nebulaBreath 16s ease-in-out infinite; }
+  .stage-nebula.n1 { width: 72%; aspect-ratio: 1.5; left: 12%; top: 6%;
+    background: radial-gradient(ellipse closest-side, rgba(240,194,127,.10), transparent 70%); }
+  .stage-nebula.n2 { width: 84%; aspect-ratio: 1.35; right: -18%; bottom: 2%;
+    background: radial-gradient(ellipse closest-side, rgba(132,120,190,.12), transparent 70%); animation-delay: -6s; }
+  .stage-nebula.n3 { width: 58%; aspect-ratio: 1.6; left: -14%; bottom: 22%;
+    background: radial-gradient(ellipse closest-side, rgba(150,190,205,.08), transparent 70%); animation-delay: -11s; }
+  @keyframes nebulaBreath { 0%,100% { opacity: .75; } 50% { opacity: 1; } }
+  .save-stage { position: relative; width: 100%; min-height: 320px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; }
+  .save-glow { position: absolute; top: 4%; left: 50%; transform: translateX(-50%); width: 240px; height: 240px;
+    border-radius: 50%; background: radial-gradient(circle, rgba(240,194,127,.14), transparent 65%);
+    opacity: 0; transition: opacity 1.6s; pointer-events: none; }
+  .save-glow.on { opacity: 1; }
+  .save-card { font-family: var(--kai); font-size: 19px; line-height: 1.9;
+    background: var(--card); border: 1px solid var(--card-border); border-radius: 18px;
+    padding: 22px 26px; max-width: 320px; color: var(--text); position: relative; z-index: 2;
+    animation: cardIn .9s cubic-bezier(.2,.7,.3,1) both; }
+  @keyframes cardIn { from { opacity: 0; transform: translateY(22px) scale(.96); } to { opacity: 1; transform: none; } }
+  .save-card.gather { animation: gather .95s cubic-bezier(.55,0,.6,.5) forwards; }
+  @keyframes gather {
+    0%   { transform: none; opacity: 1; filter: none; }
+    100% { transform: scale(.42); opacity: 0; filter: blur(10px); }
+  }
+  .hide { visibility: hidden !important; }
+  .save-orb { position: absolute; left: 50%; top: 50%; width: 20px; height: 20px; margin: -10px;
+    border-radius: 50%; background: radial-gradient(circle at 35% 32%, #fff7e8, #f0c27f 60%, #d9a45e);
+    box-shadow: 0 0 26px 10px rgba(240,194,127,.55); opacity: 0; z-index: 3; pointer-events: none; }
+  .save-orb.rise { animation: orbRise 2.1s cubic-bezier(.4,.1,.4,1) forwards; }
+  @keyframes orbRise {
+    0%   { opacity: 0; transform: translate(0, 0) scale(.55); }
+    12%  { opacity: 1; transform: translate(4px, calc(var(--ry, -185px) * .06)) scale(.95); }
+    38%  { transform: translate(15px, calc(var(--ry, -185px) * .34)) scale(.92); }
+    66%  { transform: translate(-13px, calc(var(--ry, -185px) * .68)) scale(.88); }
+    100% { opacity: 1; transform: translate(0, var(--ry, -185px)) scale(1); }
+  }
+  .save-star { position: absolute; top: 11%; left: 50%; transform: translateX(-50%) scale(0);
+    width: 18px; height: 18px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 32%, #fff7e8, #f0c27f 65%);
+    box-shadow: 0 0 24px 8px rgba(240,194,127,.55), 0 0 70px 28px rgba(240,194,127,.16); z-index: 3; }
+  .save-star.lit { animation: starSettle 1s cubic-bezier(.3,1.5,.5,1) forwards, starBreathe 4.5s ease-in-out 1.2s infinite; }
+  @keyframes starSettle { 0% { transform: translateX(-50%) scale(0); } 55% { transform: translateX(-50%) scale(1.6); } 100% { transform: translateX(-50%) scale(1); } }
+  @keyframes starBreathe { 0%,100% { box-shadow: 0 0 20px 7px rgba(240,194,127,.5), 0 0 60px 24px rgba(240,194,127,.13); }
+    50% { box-shadow: 0 0 30px 11px rgba(240,194,127,.65), 0 0 86px 34px rgba(240,194,127,.2); } }
+  .save-star .ring { position: absolute; inset: -3px; border-radius: 50%; border: 1.5px solid rgba(240,194,127,.8); opacity: 0; }
+  .save-star.lit .ring { animation: ringOut 1.3s ease-out .15s forwards; }
+  @keyframes ringOut { from { transform: scale(1); opacity: .9; } to { transform: scale(4.4); opacity: 0; } }
+  .sparkle { position: absolute; width: 4px; height: 4px; border-radius: 50%; background: #f5cf92;
+    box-shadow: 0 0 8px 2px rgba(240,194,127,.6); opacity: 0; z-index: 2; pointer-events: none; }
+  .sparkle.burst { animation: burst 1.1s cubic-bezier(.2,.6,.4,1) forwards; }
+  @keyframes burst {
+    0%   { opacity: 0; transform: translate(0,0) scale(.5); }
+    15%  { opacity: 1; }
+    100% { opacity: 0; transform: translate(var(--bx), var(--by)) scale(1); }
+  }
+  .save-response { margin-top: 30px; font-size: 18px; line-height: 2; color: var(--warm);
+    font-family: var(--kai); min-height: 40px; z-index: 2; }
+  .save-response span { opacity: 0; display: inline-block; animation: charIn .7s cubic-bezier(.2,.7,.3,1) var(--cd) both; }
+  @keyframes charIn { from { opacity: 0; transform: translateY(8px); filter: blur(3px); } to { opacity: 1; transform: none; filter: none; } }
+  .save-actions { margin-top: 42px; width: 100%; display: flex; flex-direction: column; gap: 8px; opacity: 0; }
+  .save-actions.show { animation: rise .8s ease both; }
+
+  /* ============ 小事种子 ============ */
+  #deed-chips { margin-top: 20px; }
+  .deed-swap-btn { margin-top: 10px; }
+
+  /* ============ 光的相册 ============ */
+  .album-head { margin-top: 4px; }
+  .album-count { font-size: 20px; font-weight: 600; line-height: 1.6; }
+  .album-count .n { color: var(--warm); font-size: 27px; font-family: var(--kai); }
+  .album-since { color: var(--text-faint); font-size: 13px; margin-top: 4px; }
+  #sky { position: relative; flex: 1; min-height: 320px; margin: 18px -6px 0; border-radius: 20px; overflow: hidden;
+    background: radial-gradient(ellipse at 50% 118%, rgba(240,194,127,.08) 0%, transparent 55%); }
+  #sky svg.lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .cline { fill: none; stroke: var(--warm); stroke-width: 1; vector-effect: non-scaling-stroke;
+    opacity: .1; transition: opacity .6s; stroke-linecap: round; }
+  #sky.focused .cline { opacity: .04; }
+  #sky.focused .cline.kin { opacity: .4; }
+  #sky .star { transition: opacity .6s; }
+  #sky.focused .star:not(.kin):not(.sel) { opacity: .22; }
+  #sky.focused .star.kin i { animation-duration: 1.8s; }
+  .star { position: absolute; width: 34px; height: 34px; border: none; border-radius: 50%;
+    background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    animation: starFloat var(--fd, 9s) ease-in-out var(--fdel, 0s) infinite; }
+  @keyframes starFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+  .star i { display: block; width: 9px; height: 9px; border-radius: 50%; background: #f5e9cf;
+    box-shadow: 0 0 12px 3px var(--halo, rgba(240,194,127,.45)); position: relative;
+    transform: scale(var(--sc, 1));
+    animation: twinkle var(--td, 3.4s) ease-in-out var(--tdel, 0s) infinite; transition: transform .3s; }
+  @keyframes twinkle { 0%,100% { opacity: .6; } 50% { opacity: 1; } }
+  .star.sample i { opacity: .5; }
+  .star.tonight i::after { content: ""; position: absolute; inset: -5px; border-radius: 50%;
+    border: 1px solid rgba(240,194,127,.7); animation: tonightRing 2.6s ease-out infinite; }
+  @keyframes tonightRing { 0% { transform: scale(.8); opacity: .9; } 70% { transform: scale(2.1); opacity: 0; } 100% { opacity: 0; } }
+  .star.sel i { transform: scale(calc(var(--sc, 1) * 1.9)); box-shadow: 0 0 20px 7px var(--halo, rgba(240,194,127,.6)); }
+  .star-detail { background: var(--card); border: 1px solid var(--card-border); border-radius: 18px;
+    padding: 18px 20px; margin-top: 14px; min-height: 100px; }
+  .star-detail .txt { font-family: var(--kai); font-size: 17px; line-height: 1.85; animation: rise .5s both; }
+  .star-detail .meta { color: var(--text-faint); font-size: 12px; margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap; animation: rise .5s .1s both; }
+  .star-detail .placeholder { color: var(--text-faint); font-size: 14px; line-height: 1.8; }
+  .star-detail .echo { color: var(--text-faint); font-size: 13px; line-height: 1.7; margin-top: 9px;
+    font-family: var(--kai); animation: rise .5s .15s both; }
+  .star-detail .echo b { color: var(--text-dim); font-weight: normal; }
+  .album-foot { display: flex; justify-content: center; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+
+  /* ============ 星域:气质色晕 + 雾 + 标签 + 井 + 手记灯 ============ */
+  .zone { position: absolute; transform: translate(-50%, -50%); pointer-events: none; border-radius: 50%; }
+  .zone-hue { width: 46%; aspect-ratio: 1; transition: opacity 1.2s;
+    background: radial-gradient(circle closest-side, var(--zc), transparent 72%); }
+  .zone-fog { width: 44%; aspect-ratio: 1; transition: opacity 1.2s;
+    background: radial-gradient(circle closest-side, rgba(165,178,205,.75) 0%, rgba(165,178,205,.28) 48%, transparent 70%); }
+  .zone-label { position: absolute; transform: translate(-50%, -50%); pointer-events: none; z-index: 2;
+    font-family: var(--kai); font-size: 11px; letter-spacing: .16em; color: #cfd8ef; white-space: nowrap;
+    text-shadow: 0 1px 6px rgba(7,10,26,.95), 0 0 14px rgba(7,10,26,.8); }
+  .lantern { z-index: 3; }
+  .well { position: absolute; width: 30px; height: 12px; transform: translate(-50%, -50%); border-radius: 50%; pointer-events: none;
+    background: radial-gradient(ellipse at 50% 45%, rgba(150,180,230,.45), rgba(90,110,170,.2) 60%, transparent 76%);
+    box-shadow: 0 0 14px 2px rgba(120,150,220,.16); }
+  .well::after { content: ""; position: absolute; inset: 3px 7px; border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(220,235,255,.5), transparent 65%);
+    animation: wellGlint 5.5s ease-in-out infinite; }
+  @keyframes wellGlint { 0%,100% { opacity: .3; transform: translateX(-2px); } 50% { opacity: .8; transform: translateX(2px); } }
+  /* 灯:定定的暖光,和会浮动闪烁的星做出区分 */
+  .lantern { position: absolute; width: 34px; height: 34px; transform: translate(-50%, -50%); border: none;
+    background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; }
+  .lantern i { display: block; width: 9px; height: 13px; border-radius: 4.5px; position: relative;
+    background: linear-gradient(#ffe3b3, #f2a556);
+    box-shadow: 0 0 18px 6px rgba(255,183,107,.6), 0 0 40px 15px rgba(255,183,107,.22);
+    animation: lanternBreath 4.5s ease-in-out infinite; }
+  .lantern i::before { content: ""; position: absolute; left: 50%; top: -4px; width: 6px; height: 2.5px;
+    transform: translateX(-50%); border-radius: 1px; background: #c98d4b; }
+  @keyframes lanternBreath {
+    0%,100% { box-shadow: 0 0 16px 5px rgba(255,183,107,.5), 0 0 36px 13px rgba(255,183,107,.18); }
+    50% { box-shadow: 0 0 24px 9px rgba(255,183,107,.72), 0 0 52px 20px rgba(255,183,107,.3); } }
+  /* 手记卡:同路人留下的一页 */
+  .note-view .note-pre { color: var(--text-faint); font-size: 12.5px; line-height: 1.7; animation: rise .5s both; }
+  .note-view .note-txt { font-family: var(--kai); font-size: 16.5px; line-height: 2; margin-top: 10px; animation: rise .6s .12s both; }
+  .note-view .note-sign { color: rgba(240,194,127,.66); font-size: 12.5px; font-family: var(--kai);
+    margin-top: 12px; text-align: right; animation: rise .6s .24s both; }
+
+  /* ============ 无障碍：减少动效 ============ */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01s !important; animation-iteration-count: 1 !important; transition-duration: .01s !important; }
+  }
+</style>
+</head>
+<body>
+<canvas id="bg-stars"></canvas>
+<div class="aurora a1"></div>
+<div class="aurora a2"></div>
+
+<div id="app">
+
+  <!-- 落地：心情 -->
+  <section class="screen active" id="screen-home">
+    <p class="brand" data-e style="--i:0">拾 光<span class="brand-sub">· 发现光的练习</span></p>
+    <h1 class="greeting" id="greeting" data-e style="--i:1">晚上好。</h1>
+    <div id="care-card" data-e style="--i:2"></div>
+    <div id="deed-card" data-e style="--i:2"></div>
+    <p class="sub" data-e style="--i:3">今天过得怎么样？<br>怎么样都可以，这里不打分。</p>
+    <div class="mood-orbs" id="mood-orbs" data-e style="--i:4"></div>
+    <div class="home-foot" data-e style="--i:5">
+      <div class="whisper-wrap">
+        <p class="whisper" id="whisper"></p>
+        <button class="why-link" onclick="show('screen-why')">为什么是"找好处" ›</button>
+      </div>
+      <p class="presence">今晚，还有很多人和你一样，在找光。</p>
+      <button class="mini-sky" id="mini-sky" onclick="showAlbum()" aria-label="我的光"></button>
+      <p class="tiny-note">这是一个自助练习工具，不替代专业帮助。<br>如果此刻很难撑住：24 小时心理援助热线 400-161-9995</p>
+    </div>
+  </section>
+
+  <!-- 为什么是找好处 -->
+  <section class="screen" id="screen-why">
+    <div class="topbar" data-e style="--i:0">
+      <button class="back-btn" onclick="goHome()">‹ 回去</button>
+    </div>
+    <p class="question" data-e style="--i:1">为什么是"找好处"？</p>
+    <div class="why-body">
+      <p data-e style="--i:2">一百多年前，有位叫王凤仪的老人说：找好处是<b>"暖心丸"</b>——翻旧账、挑不是，心里只会越来越苦。现代心理学也反复验证过同一件事：每天写下几件还不错的小事，坚持一段时间，人会真实地好受一些。</p>
+      <p data-e style="--i:3">这不是让你假装生活很好。糟就是糟，难就是难，<b>我们从不否认这个</b>。练习只做一件事：在真实的一天里，找到那一点点<span class="lumen">同样真实的光</span>。</p>
+      <p data-e style="--i:4">在一点好处都没有的地方，也能为自己找出好处来——这不是天赋，<b>是一种练得会的本事</b>。像肌肉，练一天，长一点。</p>
+      <p data-e style="--i:5">每个人都在受苦，只是苦和苦不同。苦本身也许一时改不了，但<b>心里怎么看这份苦，可以慢慢调</b>。</p>
+      <p data-e style="--i:6">还要说一句实话：<b>我们不承诺感恩会让现实立刻变好</b>——谁承诺这个，都别信。但心会先暖起来；心暖了，人就慢慢有了做事的力气；有了力气，眼前的日子往往真的会一点点松动。有本书叫《三十六万遍感恩的奇迹》，讲的就是这个顺序。</p>
+      <p data-e style="--i:7">所以，每天两三分钟：找一片光，存进星空。哪天心里暗了，回来看看——<b>这些光都是你自己找到的</b>，谁也拿不走。</p>
+    </div>
+  </section>
+
+  <!-- 选视角 -->
+  <section class="screen" id="screen-lens">
+    <div class="topbar" data-e style="--i:0">
+      <button class="back-btn" onclick="show('screen-home')">‹ 返回</button>
+      <div class="step-dots"><i class="on"></i><i></i><i></i></div>
+    </div>
+    <p class="ack" id="mood-ack" data-e style="--i:1"></p>
+    <div id="old-echo" data-e style="--i:2"></div>
+    <div class="quick-write" data-e style="--i:3">
+      <p class="qw-hint">心里已经有一句了？不用选角度，放在这里就好——</p>
+      <div class="qw-row">
+        <input id="qw-input" maxlength="50" placeholder="写一句，一句就够…">
+        <button class="qw-mic" id="qw-mic" aria-label="说一句也行"><svg class="lic" viewBox="0 0 24 24"><rect x="9.5" y="4" width="5" height="10" rx="2.5"/><path d="M6.5 11.5a5.5 5.5 0 0 0 11 0"/><path d="M12 17v3"/></svg></button>
+      </div>
+      <button class="btn btn-primary qw-save" id="qw-save">存下这片光</button>
+    </div>
+    <p class="question" data-e style="--i:4">或者，今晚想从哪个角度，<br>找一找今天的光？</p>
+    <div class="lens-grid" id="lens-grid"></div>
+  </section>
+
+  <!-- 找 -->
+  <section class="screen" id="screen-find">
+    <div class="topbar" data-e style="--i:0">
+      <button class="back-btn" onclick="show('screen-lens')">‹ 换个角度</button>
+      <div class="step-dots"><i class="on"></i><i class="on"></i><i></i></div>
+    </div>
+    <p class="ack" id="find-ack" data-e style="--i:1"></p>
+    <p class="question" id="find-question" data-e style="--i:1"></p>
+    <p class="sub" id="find-sub" data-e style="--i:2">点一个，或者用自己的话说。一句就够。</p>
+    <div class="chips" id="chips"></div>
+    <div class="input-wrap" data-e style="--i:6">
+      <textarea id="free-input" placeholder="也可以写下你自己的那一句……" maxlength="80"></textarea>
+    </div>
+    <div class="counter" id="counter"></div>
+    <button class="voice-btn" id="mic-btn" data-e style="--i:7"><svg class="lic" viewBox="0 0 24 24"><rect x="9.5" y="4" width="5" height="10" rx="2.5"/><path d="M6.5 11.5a5.5 5.5 0 0 0 11 0"/><path d="M12 17v3"/></svg><span id="mic-label">说一句也行</span></button>
+    <div class="find-actions" data-e style="--i:8">
+      <button class="btn btn-primary" id="save-btn" disabled onclick="saveEntry()">存下这片光</button>
+      <button class="btn btn-ghost" onclick="noFind()">今天实在找不到</button>
+    </div>
+  </section>
+
+  <!-- 收：仪式 -->
+  <section class="screen" id="screen-save">
+    <div class="save-stage">
+      <i class="stage-nebula n1"></i><i class="stage-nebula n2"></i><i class="stage-nebula n3"></i>
+      <div class="save-glow" id="save-glow"></div>
+      <div class="save-star" id="save-star"><span class="ring"></span></div>
+      <div class="save-orb" id="save-orb"></div>
+      <div class="save-card" id="save-card"></div>
+      <p class="save-response" id="save-response"></p>
+    </div>
+    <div class="save-actions" id="save-actions">
+      <button class="btn btn-primary" onclick="showAlbum()">看看我的光</button>
+      <button class="btn btn-ghost" onclick="openShare(lastEntry, 'screen-save')">✶ 把这片光分享出去</button>
+      <button class="btn btn-ghost" onclick="renderDeedPicker(); show('screen-deed')"><span class="dic"><svg class="lic" viewBox="0 0 24 24"><path d="M12 19.5V13"/><path d="M12 13C12 9.8 9.5 8.3 6.5 8.3c0 3.2 2.5 4.7 5.5 4.7z"/><path d="M12 13c0-3.2 2.5-4.7 5.5-4.7 0 3.2-2.5 4.7-5.5 4.7z"/></svg></span> 给明天的自己留一件小事</button>
+      <button class="btn btn-ghost" onclick="goHome()">今天就到这里</button>
+    </div>
+  </section>
+
+  <!-- 分享卡 -->
+  <section class="screen" id="screen-share">
+    <div class="topbar" data-e style="--i:0">
+      <button class="back-btn" onclick="show(shareReturn)">‹ 回去</button>
+    </div>
+    <p class="question" data-e style="--i:1">把这片光分享出去</p>
+    <p class="sub" data-e style="--i:2">卡片和文案都准备好了，你只管按一下。<br>分享永远是可选的。</p>
+    <div class="share-preview" data-e style="--i:3"><img id="share-img" alt="分享卡预览"></div>
+    <div class="find-actions" data-e style="--i:4">
+      <button class="btn btn-primary" id="share-xhs">分享到小红书</button>
+      <button class="btn btn-ghost" id="share-save">只保存图片</button>
+      <p class="share-status" id="share-status"></p>
+    </div>
+  </section>
+
+  <!-- 小事种子 -->
+  <section class="screen" id="screen-deed">
+    <div class="topbar" data-e style="--i:0">
+      <button class="back-btn" onclick="goHome()">‹ 先不留</button>
+    </div>
+    <p class="question" data-e style="--i:1">给明天的自己，<br>留一件小小的事。</p>
+    <p class="sub" data-e style="--i:2">很小很小的就好——做了它，明天的光就有着落了。<br>留不留都行，同时只留一件。</p>
+    <div class="chips" id="deed-chips"></div>
+    <button class="btn btn-ghost deed-swap-btn" onclick="renderDeedPicker()" data-e style="--i:6">换一批</button>
+    <div class="input-wrap" data-e style="--i:7">
+      <textarea id="deed-input" placeholder="或者自己写一件小事……" maxlength="30" style="height:60px; padding-right:16px"></textarea>
+    </div>
+    <div class="find-actions" data-e style="--i:8">
+      <button class="btn btn-primary" id="deed-save-btn" disabled>就这件了</button>
+    </div>
+  </section>
+
+  <!-- 光的相册 -->
+  <section class="screen" id="screen-album">
+    <div class="topbar" data-e style="--i:0">
+      <button class="back-btn" onclick="goHome()">‹ 回去</button>
+    </div>
+    <div class="album-head" data-e style="--i:1">
+      <p class="album-count">你已经亲手收下了 <span class="n" id="count-album">0</span> 片光</p>
+      <p class="album-since" id="album-since"></p>
+      <p class="album-recent" id="album-recent"></p>
+    </div>
+    <div id="sky" data-e style="--i:2"></div>
+    <div class="star-detail" id="star-detail" data-e style="--i:3">
+      <p class="placeholder">点一颗星，看看那天的光。<br>星光的颜色，是那天你的心情留下的底色。</p>
+    </div>
+    <div class="album-foot" id="album-foot"></div>
+  </section>
+
+</div>
+
+<script>
+// ================= 内容库（防说教检查过） =================
+const MOODS = [
+  { id: 'awful', label: '很糟',   color: '#7c89a6', ack: '今天辛苦了。糟糕的日子里还愿意打开这里，已经很不容易。' },
+  { id: 'bad',   label: '不太好', color: '#8b8fa8', ack: '不太好的日子，能撑到现在，已经不简单。' },
+  { id: 'meh',   label: '一般',   color: '#a89bb0', ack: '平平的一天，也是一步步走过来的一天。' },
+  { id: 'ok',    label: '还行',   color: '#d9a96c', ack: '还行，就已经挺好。' },
+  { id: 'good',  label: '挺好',   color: '#f0c27f', ack: '真好。那今天的光应该不难找。' },
+];
+
+// qs/chips 都是池子：问题按日轮换、点选项按日取 4——同一个视角，明天的问法和选项都不一样（去固化）
+const LENSES = [
+  { id: 'not-bad',     name: '过得去',   hint: '不用多好，过得去就算数',
+    qs: ['今天有没有一件事，\n其实还过得去？', '今天哪个时刻，\n比想象中好熬一点？'],
+    chips: ['今天总算过完了', '有一小段时间没那么难受', '担心的事没有发生', '我今天休息了一会儿',
+      '这一顿饭好好吃完了', '有个消息没有变坏', '此刻比白天松了一点'],
+    resp: ['过得去，也是一种撑住了。', '就是它了。很小，但是真的。'] },
+  { id: 'small-good',  name: '小小的好',   hint: '一口吃的、一个瞬间',
+    qs: ['今天有没有哪一口吃的、\n一杯喝的、一个瞬间，\n让你觉得还行？', '今天有没有一个小瞬间，\n让你眯了一下眼？'],
+    chips: ['一口热乎的饭', '一杯水，或一杯茶', '晒到了一会儿太阳', '被窝很暖和',
+      '一阵刚好的风', '热水澡的那几分钟', '路上闻到一阵香味'],
+    resp: ['小小的好，也是真的好。', '这一口暖，替你收好了。'] },
+  { id: 'i-did',       name: '一小步', hint: '今天自己做到的，哪怕很小',
+    qs: ['今天有没有哪件事，\n是你自己做到的——\n哪怕很小？', '今天你为自己做的\n哪件小事——再小也算？'],
+    chips: ['今天出门了', '把拖着的事做了一点', '好好吃了一顿饭', '洗了澡，收拾了自己', '撑过了今天',
+      '回了一条拖着的消息', '把一件东西放回了原位'],
+    resp: ['很小，但是你亲手做到的。', '一步，也是往前走。'] },
+  { id: 'someone-ok',  name: '有人对我还行', hint: '哪怕只是没有为难你',
+    qs: ['今天有没有谁对你还行——\n哪怕只是没有为难你？', '今天，谁让你觉得\n没那么孤单——哪怕一小下？'],
+    chips: ['有人好好跟我说了句话', '有人给我让了让路', '店员或司机态度还行', '今天没有人为难我',
+      '有人对我笑了一下', '有人耐心回答了我的问题', '有人等了等我'],
+    resp: ['被这样对待，值得记一笔。', '世界偶尔的温柔，记下来就不会忘。'] },
+  { id: 'thank-person', name: '想谢谢一个人', hint: '今天帮到你的那个人',
+    qs: ['如果今天有个人帮到了你，\n想把 TA 记下来吗？', '此刻想起谁，\n心里会暖一小块？'],
+    chips: ['家人默默做了件小事', '朋友回了我消息', '陌生人的一个小举动', '有人听我说了一会儿话',
+      '想谢谢很久前帮过我的人', '想谢谢今天的自己'],
+    resp: ['这份心意，替你记住了。', '有人在，真好。'] },
+  { id: 'others-hard', name: '别人也不容易', hint: '看见谁也在撑着',
+    qs: ['今天有没有看见谁，\n其实也在不容易地撑着？', '今天有没有看见，\n谁也在扛着自己的事？'],
+    chips: ['外卖员或司机在赶时间', '同事、同学其实也很累', '家人也有自己的难处', '网上看到有人也在熬',
+      '深夜还亮着的一扇窗', '赶末班车的人', '朋友其实也在硬撑'],
+    resp: ['能看见别人的难，说明你的心还软着。', '苦和苦不同，但都在撑。你看见了。'] },
+  { id: 'free',        name: '心里的话',    hint: '想对谁说、想说什么都行',
+    qs: ['今天，有什么想说声\n谢谢的吗——对谁、\n对什么都行。', '今晚有什么话，\n想放进心里那口井？'],
+    chips: ['谢谢我自己撑过了今天', '谢谢一个人', '谢谢一件小事', '谢谢这个安静的夜晚',
+      '有句话想说给一个人', '有句话想说给自己'],
+    resp: ['谢谢你说出来。', '记下来了，它不会消失。'] },
+];
+
+const NOFIND_RESP = '没关系，找不到也没关系。你今天愿意来找一找——这件事本身，就是一件。';
+const NOFIND_TEXT = '今天我来找过光';
+
+// 每日轻语：传统智慧的现代表达，按日期轮换，一天只说一句
+const WHISPERS = [
+  '找好处，心会暖一点；挑毛病，心会苦一点。',
+  '光不用大，一点点就够今天用了。',
+  '再糟的一天里，也常常藏着一小片还行。',
+  '好处有时不是本来就在——是被你看见，才在。',
+  '在一点好处都没有的地方找出好处，是一种练得会的本事。',
+  '每个人都在受苦，苦和苦不同；怎么看这份苦，可以练。',
+  '心里收下什么，日子就慢慢变成什么颜色。',
+];
+
+const DEEDS = ['把水杯接满，喝一口', '下楼走 5 分钟', '把窗户开条缝，换换气', '洗把脸，或冲个澡',
+  '给一盆植物浇点水', '把床铺理一理', '给一个人回条消息', '挑三件东西放回原位'];
+const DEED_LENS = { id: 'deed', name: '做了一件小事' };
+
+// 统一线条图标（金色、1.5 笔触、柔光）
+const ICONS = {
+  'not-bad':      '<svg class="lic" viewBox="0 0 24 24"><path d="M4 16.5h16"/><path d="M8.2 16.5a3.8 3.8 0 0 1 7.6 0"/><path d="M12 9.5V7.2M7 11.2 5.6 9.8M17 11.2l1.4-1.4"/></svg>',
+  'small-good':   '<svg class="lic" viewBox="0 0 24 24"><path d="M6.5 11h9.5v3.5a4 4 0 0 1-4 4h-1.5a4 4 0 0 1-4-4z"/><path d="M16 12h1.3a1.9 1.9 0 0 1 0 3.8H16"/><path d="M9.4 8c0-.9.7-1.1.7-2M12.6 8c0-.9.7-1.1.7-2"/></svg>',
+  'i-did':        '<svg class="lic" viewBox="0 0 24 24"><ellipse cx="8.6" cy="8.8" rx="2.1" ry="3" transform="rotate(-12 8.6 8.8)"/><ellipse cx="15.4" cy="15.4" rx="2.1" ry="3" transform="rotate(12 15.4 15.4)"/></svg>',
+  'someone-ok':   '<svg class="lic" viewBox="0 0 24 24"><circle cx="12" cy="7" r="2.2"/><path d="M12 3.2v-1M8.6 5.6 7.9 4.9M15.4 5.6l.7-.7"/><path d="M5.5 15.5c2-1.2 3.6-1.2 5.2 0l1.6 1.2h4.2a1.4 1.4 0 0 1 0 2.8H9.8"/></svg>',
+  'thank-person': '<svg class="lic" viewBox="0 0 24 24"><path d="M12 18.5s-5.8-3.6-5.8-7.6A3.3 3.3 0 0 1 12 8.6a3.3 3.3 0 0 1 5.8 2.3c0 4-5.8 7.6-5.8 7.6z"/></svg>',
+  'others-hard':  '<svg class="lic" viewBox="0 0 24 24"><path d="M9.8 11.5h4.4V18a1.2 1.2 0 0 1-1.2 1.2h-2A1.2 1.2 0 0 1 9.8 18z"/><path d="M12 8.8c1.3-1 1.3-2.4 0-3.6-1.3 1.2-1.3 2.6 0 3.6z"/><path d="M7 19.2h10"/></svg>',
+  'free':         '<svg class="lic" viewBox="0 0 24 24"><path d="M5.5 5.5h13a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-7.6L7 19v-3.5H5.5a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1z"/><path d="M12 8.2l.6 1.7 1.7.6-1.7.6-.6 1.7-.6-1.7-1.7-.6 1.7-.6z"/></svg>',
+  'deed':         '<svg class="lic" viewBox="0 0 24 24"><path d="M12 19.5V13"/><path d="M12 13C12 9.8 9.5 8.3 6.5 8.3c0 3.2 2.5 4.7 5.5 4.7z"/><path d="M12 13c0-3.2 2.5-4.7 5.5-4.7 0 3.2-2.5 4.7-5.5 4.7z"/></svg>',
+};
+const DEED_DONE_RESP = '你看，这片光——是你自己亲手做出来的。';
+const LS_DEED = 'shiguang_pending_deed';
+const LS_MOODLOG = 'shiguang_mood_log';   // 每次落地的心情：{date: moodId}
+const LS_CARE = 'shiguang_care_shown_at'; // 牵挂卡冷静期时间戳
+function getMoodLog() { try { return JSON.parse(localStorage.getItem(LS_MOODLOG)) || {}; } catch (e) { return {}; } }
+
+const SAMPLES = [
+  { text: '楼下的猫今天蹭了蹭我', lens: 'small-good', mood: 'ok' },
+  { text: '同事帮我带了杯咖啡', lens: 'thank-person', mood: 'meh' },
+  { text: '地铁上有人给我让了让路', lens: 'someone-ok', mood: 'bad' },
+  { text: '今天总算过完了', lens: 'not-bad', mood: 'awful' },
+  { text: '妈妈其实也很累', lens: 'others-hard', mood: 'meh' },
+];
+
+// ================= 状态 =================
+const LS_KEY = 'shiguang_entries_v1';
+const LS_LENS = 'shiguang_last_lens';
+const LS_DIRECT = 'shiguang_direct';   // 快轨偏好：用户自己选的"直接写"
+let entries = load();
+let cur = { mood: null, lens: null, text: '' };
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function load() {
+  try { const raw = localStorage.getItem(LS_KEY); if (raw) return JSON.parse(raw); } catch (e) {}
+  const seeded = SAMPLES.map((s, i) => ({ ...s, sample: true,
+    date: new Date(Date.now() - (SAMPLES.length - i) * 86400000).toISOString().slice(0, 10) }));
+  localStorage.setItem(LS_KEY, JSON.stringify(seeded));
+  return seeded;
+}
+function persist() { localStorage.setItem(LS_KEY, JSON.stringify(entries)); }
+
+// ================= 氛围层：Canvas 星空 + 流星 + 流萤 =================
+(function sky() {
+  const cv = document.getElementById('bg-stars');
+  const ctx = cv.getContext('2d');
+  let stars = [], meteors = [], W = 0, H = 0;
+  function init() {
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    W = cv.width = innerWidth * dpr; H = cv.height = innerHeight * dpr;
+    cv.style.width = innerWidth + 'px'; cv.style.height = innerHeight + 'px';
+    stars = Array.from({ length: 72 }, () => ({
+      x: Math.random() * W, y: Math.random() * H,
+      r: (Math.random() * 1.1 + .35) * dpr,
+      p: Math.random() * Math.PI * 2,
+      s: .006 + Math.random() * .014,
+      warm: Math.random() < .22,
+    }));
+  }
+  function spawnMeteor() {
+    if (document.hidden) return;
+    meteors.push({ x: W * (.2 + Math.random() * .6), y: H * .06, vx: -W * .004, vy: H * .003, life: 1 });
+  }
+  function frame() {
+    ctx.clearRect(0, 0, W, H);
+    for (const s of stars) {
+      s.p += s.s;
+      ctx.globalAlpha = .22 + .5 * (0.5 + 0.5 * Math.sin(s.p));
+      ctx.fillStyle = s.warm ? '#f0d9ae' : '#dbe3ff';
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 7); ctx.fill();
+    }
+    for (let i = meteors.length - 1; i >= 0; i--) {
+      const m = meteors[i]; m.x += m.vx; m.y += m.vy; m.life -= .02;
+      if (m.life <= 0) { meteors.splice(i, 1); continue; }
+      const g = ctx.createLinearGradient(m.x, m.y, m.x - m.vx * 14, m.y - m.vy * 14);
+      g.addColorStop(0, 'rgba(245,233,207,' + (.75 * m.life) + ')'); g.addColorStop(1, 'transparent');
+      ctx.globalAlpha = 1; ctx.strokeStyle = g; ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(m.x - m.vx * 14, m.y - m.vy * 14); ctx.stroke();
+    }
+    requestAnimationFrame(frame);
+  }
+  init(); addEventListener('resize', init);
+  if (reduceMotion) { // 静态画一帧
+    for (const s of stars) { ctx.globalAlpha = .5; ctx.fillStyle = '#dbe3ff'; ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 7); ctx.fill(); }
+  } else {
+    frame();
+    setInterval(spawnMeteor, 14000 + Math.random() * 8000);
+  }
+  // 流萤
+  if (!reduceMotion) {
+    for (let i = 0; i < 3; i++) {
+      const f = document.createElement('div');
+      f.className = 'firefly';
+      f.style.left = (12 + Math.random() * 76) + '%';
+      f.style.top = (35 + Math.random() * 50) + '%';
+      f.style.setProperty('--dur', (14 + Math.random() * 10) + 's');
+      f.style.setProperty('--delay', (Math.random() * 8) + 's');
+      f.style.setProperty('--dx1', (Math.random() * 90 - 45) + 'px');
+      f.style.setProperty('--dy1', (-40 - Math.random() * 50) + 'px');
+      f.style.setProperty('--dx2', (Math.random() * 80 - 40) + 'px');
+      f.style.setProperty('--dy2', (-110 - Math.random() * 70) + 'px');
+      document.body.appendChild(f);
+    }
+  }
+})();
+
+// ================= 导航 =================
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById(id);
+  void el.offsetWidth; // 重新触发入场动画
+  el.classList.add('active');
+}
+function goHome() {
+  if (futureView) { futureView = false; entries = savedEntries || load(); }
+  renderHome(); show('screen-home');
+}
+
+// ================= 落地 =================
+function renderHome() {
+  const h = new Date().getHours();
+  document.getElementById('greeting').textContent =
+    h < 5 ? '夜深了。' : h < 11 ? '早上好。' : h < 14 ? '中午好。' : h < 18 ? '下午好。' : h < 23 ? '晚上好。' : '夜深了。';
+  const d = new Date();
+  document.getElementById('whisper').textContent = WHISPERS[(d.getDate() + d.getMonth()) % WHISPERS.length];
+
+  // 迷你星空：最近的光直接亮在首页——"我的天空"的一角，不是一行数字
+  const ms = document.getElementById('mini-sky');
+  const today = new Date().toISOString().slice(0, 10);
+  const recent = entries.slice(-7);
+  // 星云：最近的心情晕染成的云——不是装饰，是情绪的底色聚成的
+  const moodCols = [...new Set(recent.map(e => (MOODS.find(m => m.id === e.mood) || {}).color).filter(Boolean))];
+  const nebs = [
+    { x: 24, y: 44, c: (moodCols[0] || '#f0c27f') + '22' },
+    { x: 56, y: 60, c: '#8478be1c' },
+    { x: 82, y: 34, c: (moodCols[1] || moodCols[0] || '#d9a96c') + '20' },
+  ];
+  let msHtml = nebs.map(n => `<i class="ms-nebula" style="left:${n.x}%; top:${n.y}%; --nc:${n.c}"></i>`).join('');
+  for (let i = 0; i < 9; i++) msHtml += `<i class="ms-dust" style="left:${(i * 31 + 7) % 94 + 2}%; top:${(i * 53 + 19) % 78 + 8}%"></i>`;
+  if (!entries.length) {
+    ms.innerHTML = msHtml + '<span class="ms-empty">你找到的光，会一颗颗亮在这里</span>';
+  } else {
+    recent.forEach((e, i) => {
+      const mood = MOODS.find(m => m.id === e.mood);
+      const x = 6 + i * (80 / Math.max(recent.length - 1, 1)) + (i * 29) % 8;
+      const y = 12 + (i * 41 + 17) % 52;
+      msHtml += `<i class="ms-star${e.date === today && !e.sample ? ' tonight' : ''}" style="left:${x}%; top:${y}%; ` +
+        `--halo:${mood ? mood.color + 'cc' : 'rgba(240,194,127,.6)'}; --fd:${8 + i % 4}s; --td:${(2.6 + i % 3 * .7)}s; --tdel:${(i * .6).toFixed(1)}s"></i>`;
+    });
+    ms.innerHTML = msHtml + `<span class="ms-count"><span class="ms-spark">✶</span> 我的光 · <span class="n">${entries.length}</span> 片 ›</span>`;
+  }
+
+  const row = document.getElementById('mood-orbs');
+  row.classList.remove('chosen');
+  row.innerHTML = '';
+  MOODS.forEach((m, i) => {
+    const b = document.createElement('button');
+    b.className = 'mood-orb';
+    b.innerHTML = `<span class="ball" style="--c:${m.color}; --d:${(i * .6).toFixed(1)}s"></span><span>${m.label}</span>`;
+    b.onclick = () => {
+      row.classList.add('chosen');
+      b.classList.add('picked');
+      cur.mood = m.id;
+      const log = getMoodLog();
+      log[new Date().toISOString().slice(0, 10)] = m.id;
+      localStorage.setItem(LS_MOODLOG, JSON.stringify(log));
+      setTimeout(() => {
+        cur.quick = false;
+        renderLens(m);   // 视角页总是备好——"换个角度"随时能回来，快输直达也在它顶部
+        // 难的日子，慢慢来（接住语、旧光回响、一步不少）；还行的日子，快快记
+        // 用惯快输的人回到第二层（直输就在顶部）；常用某视角的人直进它的问题页
+        const low = m.id === 'awful' || m.id === 'bad';
+        const lastLens = LENSES.find(l => l.id === localStorage.getItem(LS_LENS));
+        if (!low && !localStorage.getItem(LS_DIRECT) && lastLens) {
+          cur.lens = lastLens.id;
+          renderFind(lastLens, { ack: m.ack });
+          show('screen-find');
+        } else show('screen-lens');
+      }, reduceMotion ? 0 : 520);
+    };
+    row.appendChild(b);
+  });
+  // 牵挂卡优先于小事卡，同屏只出一张
+  if (renderCareCard()) document.getElementById('deed-card').innerHTML = '';
+  else renderDeedCard();
+}
+
+// ================= 牵挂卡：长期低落的温和留意 =================
+// 近 7 次落地里 ≥5 次是"很糟/不太好" → 牵挂一次，冷静期 14 天
+function renderCareCard() {
+  const wrap = document.getElementById('care-card');
+  wrap.innerHTML = '';
+  const log = getMoodLog();
+  const days = Object.keys(log).sort().slice(-7);
+  const low = days.filter(d => log[d] === 'awful' || log[d] === 'bad').length;
+  const last = Number(localStorage.getItem(LS_CARE) || 0);
+  if (days.length < 5 || low < 5 || Date.now() - last < 14 * 86400000) return false;
+  wrap.innerHTML =
+    `<div class="care-card">` +
+    `<p class="ct">最近这些天，你点下的多是「很糟」和「不太好」。谢谢你每天还愿意来这里。</p>` +
+    `<p class="ct">有些沉，不适合一个人扛。如果愿意，找个信得过的人说说；或者拨 <b>400-161-9995</b>，24 小时都有人接。这里的星空也一直在。</p>` +
+    `<button class="care-ok">我知道了，谢谢牵挂</button></div>`;
+  wrap.querySelector('.care-ok').onclick = () => {
+    localStorage.setItem(LS_CARE, String(Date.now()));
+    wrap.innerHTML = '';
+    renderDeedCard();
+  };
+  return true;
+}
+
+// ================= 小事种子 =================
+function getDeed() { try { return JSON.parse(localStorage.getItem(LS_DEED)); } catch (e) { return null; } }
+function renderDeedCard() {
+  const wrap = document.getElementById('deed-card');
+  const deed = getDeed();
+  const today = new Date().toISOString().slice(0, 10);
+  if (!deed || deed.date === today) { wrap.innerHTML = ''; return; } // 当天留的不当天催
+  wrap.innerHTML =
+    `<div class="deed-card"><p class="q"><span class="dic">${ICONS.deed}</span> 上次你给自己留了一件小事：</p>` +
+    `<p class="t">${deed.text}</p><div class="row">` +
+    `<button class="deed-done">做了</button>` +
+    `<button class="deed-later">先放着</button>` +
+    `<button class="deed-swap">换一件</button></div></div>`;
+  wrap.querySelector('.deed-done').onclick = () => completeDeed(deed);
+  wrap.querySelector('.deed-later').onclick = () => { wrap.innerHTML = ''; };
+  wrap.querySelector('.deed-swap').onclick = () => { renderDeedPicker(); show('screen-deed'); };
+}
+function completeDeed(deed) {
+  localStorage.removeItem(LS_DEED);
+  cur.lens = 'deed'; cur.mood = null;
+  doSave(deed.text, DEED_DONE_RESP);
+}
+function renderDeedPicker() {
+  const chips = document.getElementById('deed-chips');
+  chips.innerHTML = '';
+  const shuffled = [...DEEDS].sort(() => Math.random() - .5).slice(0, 3);
+  const saveB = document.getElementById('deed-save-btn');
+  const dInput = document.getElementById('deed-input');
+  dInput.value = ''; saveB.disabled = true;
+  let picked = '';
+  shuffled.forEach((d, i) => {
+    const b = document.createElement('button');
+    b.className = 'chip';
+    b.setAttribute('data-e', ''); b.style.setProperty('--i', 3 + i);
+    b.textContent = d;
+    b.onclick = () => {
+      chips.querySelectorAll('.chip').forEach(x => x.classList.remove('picked'));
+      b.classList.add('picked');
+      picked = d; dInput.value = '';
+      saveB.disabled = false;
+    };
+    chips.appendChild(b);
+  });
+  dInput.oninput = () => {
+    chips.querySelectorAll('.chip').forEach(x => x.classList.remove('picked'));
+    picked = dInput.value.trim();
+    saveB.disabled = picked.length === 0;
+  };
+  saveB.onclick = () => {
+    const text = (dInput.value.trim() || picked).slice(0, 30);
+    if (!text) return;
+    localStorage.setItem(LS_DEED, JSON.stringify({ text, date: new Date().toISOString().slice(0, 10) }));
+    goHome();
+  };
+}
+
+// ================= 选视角 =================
+function fmtDate(d) { const [, m, day] = d.split('-'); return Number(m) + ' 月 ' + Number(day) + ' 日'; }
+
+function renderLens(mood) {
+  document.getElementById('mood-ack').textContent = mood.ack;
+
+  // 旧光回响：低落的日子，过去的自己来暖现在的自己
+  const echoEl = document.getElementById('old-echo');
+  const today = new Date().toISOString().slice(0, 10);
+  const pool = entries.filter(e => e.date !== today);
+  if ((mood.id === 'awful' || mood.id === 'bad') && pool.length) {
+    const d = new Date();
+    const pick = pool[(d.getDate() * 7 + d.getMonth()) % pool.length];
+    echoEl.innerHTML =
+      `<div class="echo-card"><p class="eq">还记得吗？${fmtDate(pick.date)}的你，找到过这片光：</p>` +
+      `<p class="et">「${pick.text}」</p></div>`;
+  } else {
+    echoEl.innerHTML = '';
+  }
+
+  const last = localStorage.getItem(LS_LENS);
+  const grid = document.getElementById('lens-grid');
+  grid.classList.remove('chosen');
+  grid.innerHTML = '';
+  LENSES.forEach((l, i) => {
+    const b = document.createElement('button');
+    b.className = 'lens-card' + (l.id === last ? ' last' : '');
+    b.setAttribute('data-e', ''); b.style.setProperty('--i', 5 + i);
+    b.innerHTML = `<span class="ico">${ICONS[l.id]}</span><span class="name">${l.name}</span>` +
+      `<span class="hint">${l.hint}</span>` + (l.id === last ? '<span class="tag">上次在这里</span>' : '');
+    b.onclick = () => {
+      grid.classList.add('chosen');
+      b.classList.add('going');
+      cur.lens = l.id; cur.quick = false;
+      setTimeout(() => { renderFind(l); show('screen-find'); }, reduceMotion ? 0 : 380);
+    };
+    grid.appendChild(b);
+  });
+
+  // 快输直达：心里已有那句，写下/说出就收，不用选角度（归"心里的话"域）
+  const qwInput = document.getElementById('qw-input');
+  const qwSave = document.getElementById('qw-save');
+  qwInput.value = '';
+  qwSave.classList.remove('show');
+  qwInput.oninput = () => qwSave.classList.toggle('show', qwInput.value.trim().length > 0);
+  qwSave.onclick = () => {
+    cur.lens = 'free'; cur.quick = true;
+    cur.text = qwInput.value.trim();
+    saveEntry();
+  };
+}
+
+// ================= 找 =================
+const input = document.getElementById('free-input');
+const saveBtn = document.getElementById('save-btn');
+const counter = document.getElementById('counter');
+
+function renderFind(lens, opts) {
+  opts = opts || {};
+  document.getElementById('find-ack').textContent = opts.ack || '';
+  const chips = document.getElementById('chips');
+  chips.innerHTML = '';
+  const dd = new Date();
+
+  // 问题按日轮换：同一个视角，明天问法不一样
+  const qs = lens.qs || [lens.q];
+  document.getElementById('find-question').innerHTML =
+    qs[(dd.getDate() + lens.id.length) % qs.length].replace(/\n/g, '<br>');
+  // 点选项从池子里按日取 4 个
+  const pool = lens.chips;
+  const off = (dd.getDate() + dd.getMonth() + lens.id.length) % pool.length;
+  Array.from({ length: Math.min(4, pool.length) }, (_, k) => pool[(off + k) % pool.length]).forEach((c, i) => {
+    const b = document.createElement('button');
+    b.className = 'chip';
+    b.setAttribute('data-e', ''); b.style.setProperty('--i', 3 + i);
+    b.textContent = c;
+    b.onclick = () => {
+      document.querySelectorAll('#chips .chip').forEach(x => x.classList.remove('picked'));
+      b.classList.add('picked');
+      cur.text = c; input.value = '';
+      updateCounter();
+      saveBtn.disabled = false;
+    };
+    chips.appendChild(b);
+  });
+  input.value = ''; cur.text = '';
+  saveBtn.disabled = true;
+  updateCounter();
+}
+
+input.addEventListener('input', () => {
+  document.querySelectorAll('#chips .chip').forEach(x => x.classList.remove('picked'));
+  cur.text = input.value.trim();
+  saveBtn.disabled = cur.text.length === 0;
+  updateCounter();
+});
+
+function updateCounter() {
+  const n = input.value.length;
+  if (n === 0) { counter.textContent = ''; counter.className = 'counter'; return; }
+  if (n > 50) { counter.textContent = '有点长啦——挑最想留下的那句就好（' + n + '/50）'; counter.className = 'counter warn'; }
+  else { counter.textContent = n + '/50'; counter.className = 'counter'; }
+}
+
+// 语音输入（Web Speech API，可用才显示）——同一套识别，绑到"找"页和第二层快输两处
+(function () {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return;
+  let rec = null, timer = null;
+  function bindMic(mic, target, labelEl, idleText) {
+    mic.classList.add('show');
+    mic.onclick = () => {
+      if (rec) { rec.stop(); return; }
+      rec = new SR();
+      rec.lang = 'zh-CN'; rec.interimResults = true;
+      mic.classList.add('rec');
+      if (labelEl) labelEl.textContent = '在听着呢……点一下说完';
+      rec.onresult = e => {
+        let t = '';
+        for (const r of e.results) t += r[0].transcript;
+        target.value = t;
+        target.dispatchEvent(new Event('input'));
+      };
+      const done = () => {
+        clearTimeout(timer); mic.classList.remove('rec'); rec = null;
+        if (labelEl) labelEl.textContent = idleText;
+      };
+      rec.onend = done; rec.onerror = done;
+      rec.start();
+      timer = setTimeout(() => rec && rec.stop(), 15000);
+    };
+  }
+  bindMic(document.getElementById('mic-btn'), input, document.getElementById('mic-label'), '说一句也行');
+  bindMic(document.getElementById('qw-mic'), document.getElementById('qw-input'), null, '');
+})();
+
+// ================= 收：仪式 =================
+function saveEntry() { doSave(cur.text.slice(0, 50), pickResp()); }
+function noFind() { cur.text = NOFIND_TEXT; doSave(NOFIND_TEXT, NOFIND_RESP); }
+function pickResp() {
+  const lens = LENSES.find(l => l.id === cur.lens);
+  const pool = lens ? lens.resp : [];
+  return pool[Math.floor(Math.random() * pool.length)] || '这一小片光，替你收好了。';
+}
+function doSave(text, resp) {
+  lastEntry = { text, lens: cur.lens, mood: cur.mood, date: new Date().toISOString().slice(0, 10), resp };
+  entries.push(lastEntry);
+  persist();
+  // 路径偏好：快输的光不算"选了视角"；走引导保存则回到"记住视角"模式
+  if (cur.quick) localStorage.setItem(LS_DIRECT, '1');
+  else if (cur.lens && cur.lens !== 'deed') {
+    localStorage.removeItem(LS_DIRECT);
+    localStorage.setItem(LS_LENS, cur.lens);
+  }
+
+  const card = document.getElementById('save-card');
+  const orb = document.getElementById('save-orb');
+  const star = document.getElementById('save-star');
+  const glow = document.getElementById('save-glow');
+  const respEl = document.getElementById('save-response');
+  const actions = document.getElementById('save-actions');
+  const stage = document.querySelector('.save-stage');
+
+  card.textContent = '「' + text + '」';
+  card.className = 'save-card'; card.style.opacity = '';
+  orb.className = 'save-orb';
+  star.className = 'save-star';
+  glow.className = 'save-glow';
+  actions.className = 'save-actions';
+  respEl.innerHTML = '';
+  document.querySelectorAll('.sparkle').forEach(s => s.remove());
+  show('screen-save');
+
+  const t = reduceMotion
+    ? { gather: 0, orb: 0, star: 100, resp: 200, act: 300 }
+    : { gather: 900, orb: 1600, star: 3550, resp: 4200, act: 5000 };
+
+  // 上升距离：光珠中心 → 星星中心，运行时精确计算
+  requestAnimationFrame(() => {
+    const oR = orb.getBoundingClientRect(), sR = star.getBoundingClientRect();
+    orb.style.setProperty('--ry', (sR.top + sR.height / 2 - (oR.top + oR.height / 2)) + 'px');
+  });
+
+  // 1) 句子凝聚（消散），光珠同时在原位亮起
+  setTimeout(() => { card.classList.add('gather'); }, t.gather);
+  // 2) 光珠摇曳上升
+  setTimeout(() => { card.classList.add('hide'); orb.classList.add('rise'); }, t.orb);
+  // 3) 化作星星定格：脉冲环 + 星尘迸散
+  setTimeout(() => {
+    orb.classList.add('hide');
+    star.classList.add('lit');
+    glow.classList.add('on');
+    if (!reduceMotion) {
+      const rect = star.getBoundingClientRect(), sRect = stage.getBoundingClientRect();
+      for (let i = 0; i < 9; i++) {
+        const sp = document.createElement('i');
+        sp.className = 'sparkle';
+        sp.style.left = (rect.left - sRect.left + 7) + 'px';
+        sp.style.top = (rect.top - sRect.top + 7) + 'px';
+        const ang = (i / 9) * Math.PI * 2 + Math.random() * .5;
+        sp.style.setProperty('--bx', Math.cos(ang) * (34 + Math.random() * 26) + 'px');
+        sp.style.setProperty('--by', Math.sin(ang) * (30 + Math.random() * 22) + 'px');
+        stage.appendChild(sp);
+        requestAnimationFrame(() => sp.classList.add('burst'));
+      }
+    }
+  }, t.star);
+  // 4) 回应逐字浮现
+  setTimeout(() => {
+    respEl.innerHTML = [...resp].map((ch, i) =>
+      `<span style="--cd:${i * 45}ms">${ch === ' ' ? '&nbsp;' : ch}</span>`).join('');
+  }, t.resp);
+  // 5) 操作浮现
+  setTimeout(() => { actions.classList.add('show'); }, t.act);
+}
+
+// ================= 光的相册：星域 + 星座 =================
+// 星域按"视线由近及远"排布：脚边(下) → 身边 → 路上 → 街上 → 心里 → 远方(上)
+// 练习久了回看星图，星星从脚边一路长到远方——地图就是来路
+const ANCHORS = {
+  'not-bad': [32, 80], 'small-good': [60, 68], 'i-did': [20, 56], 'deed': [43, 60],
+  'someone-ok': [74, 46], 'thank-person': [40, 33], 'others-hard': [57, 14], 'free': [85, 85],
+};
+
+// 星域气质：每个视角有自己的色晕与名字；雾随该域光的数量退开
+const ZONES = {
+  'not-bad':      { hue: '96,116,152',  label: '过得去' },
+  'small-good':   { hue: '150,190,205', label: '小小的好' },
+  'i-did':        { hue: '120,175,150', label: '一小步' },
+  'deed':         { hue: '120,175,150', label: '小事种子' },
+  'someone-ok':   { hue: '225,185,120', label: '有人对我还行' },
+  'thank-person': { hue: '240,175,110', label: '想谢谢一个人' },
+  'others-hard':  { hue: '132,122,192', label: '别人也不容易' },
+  'free':         { hue: '95,118,188',  label: '心里的话' },
+};
+
+// 拾光者手记：以前的拾光者留在雾里的话。该星域有光后，灯才显形——被你看见，不是被系统颁发
+// 文案标准：门槛低到"这也算？那我也行"——手记是范例不是道理，全是大众日常场景
+// 每域一个池子，按日期轮换（同一天稳定，隔天换新）；正式版池子持续追加
+const NOTE_PRE = '雾退开的地方，有一盏留下的灯。灯下压着一页字——';
+const HANDNOTES = {
+  'not-bad': { notes: [
+    '今天什么也没做成。躺到下午，起来喝了口水，在窗边站了一会儿。后来想，至少我起来喝水了。今天就记这个。',
+    '地铁上一路都有座。就这么件事，今天靠它撑了一下。',
+    '今天没发生什么好事，但也没发生什么坏事。想了想，这也够记一笔了。',
+    '下了一天雨，到家之前正好停了。运气这东西，偶尔也站我这边一次。',
+  ] },
+  'small-good': { notes: [
+    '被子晒过太阳的味道。就这一件，但今天确实有这一件。',
+    '路过包子铺，热气扑了我一脸。没买，但闻到就挺好。',
+    '洗完澡那几分钟，人是松的。就为这几分钟，今天也算有个盼头。',
+    '半夜给手机充上电，"叮"一声。不知道为什么，今天听着特别踏实。',
+  ] },
+  'i-did': { notes: [
+    '拖了十一天的邮件，今天回了。两行字，写了十分钟。发出去之后在椅子上坐了很久——原来做完是这种感觉。',
+    '今天把桌上的外卖盒扔了。就这一件事。但空出来的那一块桌面，看着舒服。',
+    '闹钟响第三遍的时候，起来了。虽然晚，但起来了。',
+    '给自己煮了碗面，还卧了个蛋。吃完想，我还是会照顾自己的。',
+  ] },
+  'someone-ok': { notes: [
+    '便利店阿姨多塞给我一包纸巾，说看我像感冒了。出门走了两步，眼睛有点酸。也许我最近太缺这个了。',
+    '电梯里有人帮我按住了门。就两秒钟的事，但那两秒，心里是暖的。',
+    '同事今天没催我，只说了句"不急"。可能他随口一说，但我记下了。',
+    '问路的时候，那个人特意多走了几步给我指。谢谢说出口的时候，自己心里也亮了一下。',
+  ] },
+  'thank-person': { notes: [
+    '想谢谢初中同桌。那年她把伞塞给我，自己跑进雨里。这事我记了十几年，她大概早忘了。',
+    '想谢谢我妈。今天她没问我"怎么还不睡"，只是把切好的水果放在了我门口。',
+    '朋友秒回了我消息，就三个字："在的呢。"可那一刻，真的很顶用。',
+    '雨下那么大，外卖小哥送来的饭还是热的。想跟他说声谢谢，也说声慢点骑。',
+  ] },
+  'others-hard': { notes: [
+    '楼下修车师傅蹲在路边吃盒饭，吃两口看一眼手机，不知道在等谁的消息。这条街上每个人都提着自己的事在走，我也是其中一个。这么一想，反而没那么孤单。',
+    '半夜楼上还有脚步声。以前嫌吵，今天忽然想，他也还没睡着啊。',
+    '老板今天发了火，后来我看见他一个人在会议室坐了很久。谁都有扛不动的时候吧。',
+    '地铁里有个人打瞌睡，头一点一点的。到站他惊醒着跑出去，我看着他背影，心里说了声辛苦。',
+  ] },
+  'free': { pre: '井边有一盏灯。灯下压着一页字——', notes: [
+    '这口井很深。说什么都可以，它只是听着。',
+  ] },
+};
+function showAlbum() {
+  const headP = document.querySelector('.album-count');
+  if (futureView) {
+    // 前人的天空：期许感的全部，就这两行
+    headP.innerHTML = '一位拾光者，三个月的天空';
+    document.getElementById('album-since').textContent = 'TA 也是从第一片开始的。';
+    document.getElementById('album-recent').innerHTML = '';
+  } else {
+    headP.innerHTML = '你已经亲手收下了 <span class="n">' + entries.length + '</span> 片光';
+    document.getElementById('album-since').textContent = entries.length ? formatSince(entries[0].date) : '';
+
+    // 正向计数：只数好的，永不数糟的、永不比较
+    const cutoff = new Date(Date.now() - 14 * 86400000).toISOString().slice(0, 10);
+    const recentN = entries.filter(e => e.date >= cutoff).length;
+    const log = getMoodLog();
+    const okDays = Object.keys(log).filter(d => d >= cutoff && (log[d] === 'ok' || log[d] === 'good')).length;
+    document.getElementById('album-recent').innerHTML = recentN
+      ? '最近两周：收下了 <b>' + recentN + '</b> 片光' + (okDays ? '；有 <b>' + okDays + '</b> 天，你觉得还行' : '')
+      : '';
+  }
+
+  const sky = document.getElementById('sky');
+  sky.innerHTML = '';
+  sky.classList.remove('focused');
+  const today = new Date().toISOString().slice(0, 10);
+
+  // 按视角分组（保持时间序），域内金角螺旋排布——位置稳定且不重叠
+  const groups = {};
+  entries.forEach(e => { const k = e.lens || 'free'; (groups[k] = groups[k] || []).push(e); });
+  const pos = new Map();
+  for (const [lens, list] of Object.entries(groups)) {
+    const a = ANCHORS[lens] || [50, 45];
+    list.forEach((e, k) => {
+      const ang = k * 2.4 + lens.length;
+      // 域半径封顶：晚来的星在外环带内错落，不侵入邻域
+      let rad = k === 0 ? 0 : 3.5 + 4.2 * Math.sqrt(k);
+      if (rad > 13.5) rad = 13.5 - (k % 4) * 1.1;
+      pos.set(e, [
+        Math.min(92, Math.max(5, a[0] + Math.cos(ang) * rad * 1.2)),
+        Math.min(88, Math.max(4, a[1] + Math.sin(ang) * rad)),
+      ]);
+    });
+  }
+
+  // 星域层：气质色晕 + 雾（光越多雾越薄）+ 标签；"心里的话"是一口星井
+  for (const [lens, z] of Object.entries(ZONES)) {
+    const a = ANCHORS[lens]; if (!a) continue;
+    const n = (groups[lens] || []).length;
+    const hue = document.createElement('div');
+    hue.className = 'zone zone-hue';
+    hue.style.cssText = `left:${a[0]}%; top:${a[1]}%; --zc: rgba(${z.hue},${n ? .22 : .06});`;
+    sky.appendChild(hue);
+    const fog = document.createElement('div');
+    fog.className = 'zone zone-fog';
+    fog.style.cssText = `left:${a[0]}%; top:${a[1]}%; opacity:${n === 0 ? .34 : n === 1 ? .12 : n === 2 ? .07 : .04};`;
+    sky.appendChild(fog);
+    if (lens === 'free') {
+      const w = document.createElement('div');
+      w.className = 'well';
+      w.style.cssText = `left:${a[0]}%; top:${a[1]}%;`;
+      sky.appendChild(w);
+    }
+    const lab = document.createElement('span');
+    lab.className = 'zone-label';
+    lab.style.cssText = `left:${a[0]}%; top:${lens === 'free' ? a[1] - 10 : Math.min(90, a[1] + 12)}%; opacity:${n ? .5 : .22};`;
+    lab.textContent = z.label;
+    sky.appendChild(lab);
+  }
+
+  // 星座连线（同视角按时间相连，极淡）
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('class', 'lines');
+  svg.setAttribute('viewBox', '0 0 100 100');
+  svg.setAttribute('preserveAspectRatio', 'none');
+  // 就近生长：每颗新星连到同星座里离它最近的一颗，像树一样长出来
+  for (const [lens, list] of Object.entries(groups)) {
+    if (list.length < 2) continue;
+    for (let k = 1; k < list.length; k++) {
+      const p = pos.get(list[k]);
+      let best = 0, bd = Infinity;
+      for (let j = 0; j < k; j++) {
+        const q = pos.get(list[j]);
+        const d = (p[0] - q[0]) ** 2 + (p[1] - q[1]) ** 2;
+        if (d < bd) { bd = d; best = j; }
+      }
+      const q = pos.get(list[best]);
+      const ln = document.createElementNS(svgNS, 'line');
+      ln.setAttribute('x1', q[0]); ln.setAttribute('y1', q[1]);
+      ln.setAttribute('x2', p[0]); ln.setAttribute('y2', p[1]);
+      ln.setAttribute('class', 'cline');
+      ln.dataset.lens = lens;
+      svg.appendChild(ln);
+    }
+  }
+  sky.appendChild(svg);
+
+  entries.forEach((e, i) => {
+    const b = document.createElement('button');
+    b.className = 'star' + (e.sample ? ' sample' : '') + (e.date === today && !e.sample ? ' tonight' : '');
+    b.dataset.lens = e.lens || 'free';
+    const [x, y] = pos.get(e);
+    b.style.left = x + '%'; b.style.top = y + '%';
+    b.style.setProperty('--fd', (8 + (i * 7) % 5) + 's');
+    b.style.setProperty('--fdel', ((i * 13) % 6) + 's');
+    const mood = MOODS.find(m => m.id === e.mood);
+    // 星等：越久远的光越小越淡——时间沉成星海，近处的光最亮;没有东西消失
+    const days = (Date.now() - new Date(e.date + 'T00:00:00')) / 86400000;
+    const fresh = Math.max(0, 1 - days / 75);
+    const sc = (.6 + .4 * fresh).toFixed(2);
+    const haloA = ['55', '77', '99', 'bb', 'dd'][Math.min(4, Math.floor(fresh * 4.99))];
+    b.innerHTML = `<i style="--halo:${mood ? mood.color + haloA : `rgba(240,194,127,${(.2 + .3 * fresh).toFixed(2)})`}; ` +
+      `--sc:${sc}; background: rgba(245,233,207,${(.55 + .45 * fresh).toFixed(2)}); ` +
+      `--td:${(2.8 + (i % 4) * .5)}s; --tdel:${(i * 17) % 40 / 10}s"></i>`;
+    b.onclick = ev => { ev.stopPropagation(); focusStar(sky, b, e, groups[e.lens || 'free']); };
+    sky.appendChild(b);
+  });
+
+  // 拾光者手记的灯：去过的星域，雾里显出一盏定定的小灯
+  for (const [lens, hn] of Object.entries(HANDNOTES)) {
+    if (!(groups[lens] || []).length) continue;
+    const a = ANCHORS[lens];
+    const lt = document.createElement('button');
+    lt.className = 'lantern';
+    lt.innerHTML = '<i></i>';
+    lt.style.cssText = `left:${Math.max(5, a[0] - 9)}%; top:${Math.min(90, a[1] + 5)}%;`;
+    lt.onclick = ev => { ev.stopPropagation(); showNote(lens, hn); };
+    sky.appendChild(lt);
+  }
+
+  // 点空处：收回聚焦
+  sky.onclick = () => {
+    sky.classList.remove('focused');
+    sky.querySelectorAll('.star').forEach(s => s.classList.remove('sel', 'kin'));
+    sky.querySelectorAll('.cline').forEach(l => l.classList.remove('kin'));
+  };
+
+  const detail = document.getElementById('star-detail');
+  detail.innerHTML = futureView
+    ? '<p class="placeholder">点一颗星，看看 TA 那天的光。<br>雾里的灯，也可以点点看。</p>'
+    : '<p class="placeholder">点一颗星，看看那天的光。<br>同一个角度找到的光，会慢慢连成你自己的星座。<br>雾里若有一盏小灯，也可以点点看。</p>';
+
+  const foot = document.getElementById('album-foot');
+  foot.innerHTML = '';
+  if (futureView) {
+    const back = document.createElement('button');
+    back.className = 'btn btn-ghost'; back.style.cssText = 'width:auto; font-family:var(--kai); font-size:13px;';
+    back.textContent = '‹ 回到我的天空';
+    back.onclick = exitFutureSky;
+    foot.appendChild(back);
+  } else {
+    const fut = document.createElement('button');
+    fut.className = 'btn btn-ghost'; fut.style.cssText = 'width:auto; font-family:var(--kai); font-size:13px;';
+    fut.textContent = '✦ 看看一位拾光者三个月的天空 ›';
+    fut.onclick = viewFutureSky;
+    foot.appendChild(fut);
+    if (entries.some(e => e.sample)) {
+      const b = document.createElement('button');
+      b.className = 'btn btn-ghost'; b.style.width = 'auto';
+      b.textContent = '清除示例星星';
+      b.onclick = () => { entries = entries.filter(e => !e.sample); persist(); showAlbum(); };
+      foot.appendChild(b);
+    }
+    // 原型评审用：极端数据演示（只改内存不落盘，"恢复"或刷新即还原）
+    [['演示·第一晚', 'few'], ['演示·三个月', 'many'], ['恢复', 'restore']].forEach(([t, m]) => {
+      const b = document.createElement('button');
+      b.className = 'btn btn-ghost'; b.style.cssText = 'width:auto; font-size:12px; padding:6px 10px;';
+      b.textContent = t;
+      b.onclick = () => demoFill(m);
+      foot.appendChild(b);
+    });
+  }
+  show('screen-album');
+}
+// 三个月的天空：80 片光的预置数据（"前人的天空"与评审演示共用；日期止于昨天——前人的天空没有"今晚"）
+function makePreset80() {
+  const now = Date.now();
+  const lenses = ['not-bad', 'small-good', 'i-did', 'someone-ok', 'thank-person', 'others-hard', 'free', 'deed'];
+  const moods = ['awful', 'bad', 'meh', 'ok', 'good', 'meh', 'ok', 'bad', 'good', 'ok'];
+  const texts = ['今天总算过完了', '晒到了一会儿太阳', '把拖着的事做了一点', '地铁上有人让了让路',
+    '朋友回了我消息', '妈妈其实也很累', '谢谢这个安静的夜晚', '下楼走了 5 分钟',
+    '一口热乎的饭', '被窝很暖和', '把床铺理了理', '同事说了句不急'];
+  const arr = [];
+  for (let i = 0; i < 80; i++) {
+    const d = new Date(now - (80 - i) * 1.1 * 86400000);
+    arr.push({ text: texts[(i * 5 + 2) % texts.length], lens: lenses[(i * 3 + Math.floor(i / 8)) % lenses.length],
+      mood: moods[(i * 7 + 1) % moods.length], date: d.toISOString().slice(0, 10) });
+  }
+  return arr;
+}
+
+// 前人的天空：期许感来自"有人走到过那里"，不是"你必须走到那里"
+let futureView = false, savedEntries = null;
+function viewFutureSky() {
+  if (!futureView) { savedEntries = entries; futureView = true; }
+  entries = makePreset80();
+  showAlbum();
+}
+function exitFutureSky() {
+  futureView = false;
+  entries = savedEntries || load();
+  showAlbum();
+}
+
+// 原型评审用：注入极端数据看星图形态。不调用 persist()，localStorage 不受影响
+function demoFill(mode) {
+  futureView = false;
+  if (mode === 'restore') { entries = load(); showAlbum(); return; }
+  if (mode === 'few') {
+    entries = [{ text: '今天总算过完了', lens: 'not-bad', mood: 'bad', date: new Date().toISOString().slice(0, 10) }];
+  } else {
+    entries = makePreset80();
+  }
+  showAlbum();
+}
+function formatSince(d) {
+  const [, m, day] = d.split('-');
+  return '最早的一片，来自 ' + Number(m) + ' 月 ' + Number(day) + ' 日';
+}
+// 点灯：读一页拾光者手记（按日期轮换，各星域错开；同一天再点是同一页，明天换新）
+function showNote(lens, hn) {
+  const d = new Date();
+  const note = hn.notes[(d.getDate() + d.getMonth() + lens.length) % hn.notes.length];
+  const detail = document.getElementById('star-detail');
+  detail.innerHTML =
+    '<div class="note-view">' +
+    `<p class="note-pre">${hn.pre || NOTE_PRE}</p>` +
+    `<p class="note-txt">「${note}」</p>` +
+    '<p class="note-sign">—— 一位走过这里的拾光者</p></div>';
+}
+function focusStar(sky, b, e, group) {
+  const lensId = e.lens || 'free';
+  sky.classList.add('focused');
+  sky.querySelectorAll('.star').forEach(s => {
+    s.classList.remove('sel');
+    s.classList.toggle('kin', s.dataset.lens === lensId);
+  });
+  b.classList.add('sel');
+  sky.querySelectorAll('.cline').forEach(l => l.classList.toggle('kin', l.dataset.lens === lensId));
+  showStar(e, group);
+}
+function showStar(e, group) {
+  const lens = e.lens === 'deed' ? DEED_LENS : LENSES.find(l => l.id === e.lens);
+  const mood = MOODS.find(m => m.id === e.mood);
+  const idx = group ? group.indexOf(e) : -1;
+  const prev = idx > 0 ? group[idx - 1] : null;
+  const detail = document.getElementById('star-detail');
+  detail.innerHTML =
+    `<p class="txt">「${e.text}」</p>` +
+    `<p class="meta"><span>${e.date}</span>` +
+    (lens ? `<span class="mico">${ICONS[lens.id] || ''} ${lens.name}${idx >= 0 ? ' · 第 ' + (idx + 1) + ' 片' : ''}</span>` : '') +
+    (mood ? `<span>那天：${mood.label}</span>` : '') +
+    (e.sample ? '<span>示例</span>' : '') + '</p>' +
+    (prev ? `<p class="echo">这个星座的上一片：<b>「${prev.text}」</b> · ${prev.date}</p>` : '') +
+    `<button class="share-mini" onclick="openShare(curStar, 'screen-album')">✶ 把这片光分享出去 ›</button>`;
+  curStar = e;
+}
+
+// ================= 分享卡 =================
+let lastEntry = null, curStar = null, shareReturn = 'screen-home';
+
+function wrapText(c, text, maxW) {
+  const lines = []; let line = '';
+  for (const ch of text) {
+    if (c.measureText(line + ch).width > maxW && line) { lines.push(line); line = ch; }
+    else line += ch;
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+function openShare(e, from) {
+  if (!e) return;
+  shareReturn = from || 'screen-home';
+  const lensObj = e.lens === 'deed' ? DEED_LENS : LENSES.find(l => l.id === e.lens);
+  const respText = e.resp || (lensObj && lensObj.resp ? lensObj.resp[0] : '这一小片光，替你收好了。');
+
+  const cv = document.createElement('canvas');
+  cv.width = 750; cv.height = 1000;
+  const c = cv.getContext('2d');
+  // 夜空
+  const g = c.createLinearGradient(0, 0, 0, 1000);
+  g.addColorStop(0, '#070b1c'); g.addColorStop(.6, '#10152e'); g.addColorStop(1, '#1a1f3d');
+  c.fillStyle = g; c.fillRect(0, 0, 750, 1000);
+  for (let i = 0; i < 64; i++) {
+    const x = (i * 97 + 31) % 750, y = (i * 211 + 57) % 1000;
+    c.globalAlpha = .2 + (i % 5) * .12;
+    c.fillStyle = i % 4 ? '#dbe3ff' : '#f0d9ae';
+    c.beginPath(); c.arc(x, y, (i % 3) * .7 + .8, 0, 7); c.fill();
+  }
+  c.globalAlpha = 1;
+  // 那颗星
+  const rg = c.createRadialGradient(375, 235, 0, 375, 235, 150);
+  rg.addColorStop(0, 'rgba(240,194,127,.85)'); rg.addColorStop(.16, 'rgba(240,194,127,.4)'); rg.addColorStop(1, 'rgba(240,194,127,0)');
+  c.fillStyle = rg; c.beginPath(); c.arc(375, 235, 150, 0, 7); c.fill();
+  c.fillStyle = '#f5cf92'; c.beginPath(); c.arc(375, 235, 11, 0, 7); c.fill();
+  // 正文
+  c.textAlign = 'center';
+  c.fillStyle = '#f2ede4';
+  c.font = '44px "Kaiti SC","STKaiti","KaiTi",serif';
+  const lines = wrapText(c, '「' + e.text + '」', 560);
+  let y = 470;
+  for (const ln of lines) { c.fillText(ln, 375, y); y += 70; }
+  // 回应
+  c.fillStyle = '#f0c27f';
+  c.font = '30px "Kaiti SC","STKaiti","KaiTi",serif';
+  y += 26;
+  for (const ln of wrapText(c, respText, 540)) { c.fillText(ln, 375, y); y += 48; }
+  // 页脚
+  c.fillStyle = 'rgba(242,237,228,.5)';
+  c.font = '24px -apple-system, "PingFang SC", sans-serif';
+  c.fillText(fmtDate(e.date) + ' · 第 ' + (entries.indexOf(e) + 1) + ' 片光', 375, 895);
+  c.fillStyle = 'rgba(240,194,127,.75)';
+  c.fillText('✶ 拾 光 · 发现光的练习', 375, 940);
+
+  const url = cv.toDataURL('image/png');
+  document.getElementById('share-img').src = url;
+  const postText = '「' + e.text + '」\n\n今晚在拾光找到的一片光 ✶\n#找好处 #感恩练习 #每天一片光 #发现光的练习';
+  const statusEl = document.getElementById('share-status');
+  statusEl.textContent = '';
+  const saveImg = () => {
+    const a = document.createElement('a');
+    a.download = '拾光-' + e.date + '.png'; a.href = url; a.click();
+  };
+  const copyText = async () => {
+    try { await navigator.clipboard.writeText(postText); return true; } catch (err) { return false; }
+  };
+
+  document.getElementById('share-save').onclick = saveImg;
+
+  // 一键分享：能走系统分享面板就带图直达小红书；否则自动"存图+复制+唤起"
+  document.getElementById('share-xhs').onclick = async () => {
+    const copied = await copyText();
+    try {
+      const blob = await (await fetch(url)).blob();
+      const file = new File([blob], 'shiguang-' + e.date + '.png', { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], text: postText });
+        statusEl.textContent = copied ? '✓ 文案也复制好了，需要时粘贴即可' : '';
+        return;
+      }
+    } catch (err) { if (err && err.name === 'AbortError') return; }
+    // 降级：一个动作替用户做完三件事
+    saveImg();
+    statusEl.textContent = (copied ? '✓ 文案已复制  ' : '') + '✓ 卡片已保存\n打开小红书，选图、粘贴，就好了';
+    if (/iPhone|iPad|Android/i.test(navigator.userAgent)) {
+      setTimeout(() => { try { location.href = 'xhsdiscover://'; } catch (err) {} }, 800);
+    }
+  };
+  show('screen-share');
+}
+
+// ================= 启动 =================
+renderHome();
+</script>
+</body>
+</html>
