@@ -347,8 +347,13 @@
     font-family: var(--kai); min-height: 40px; z-index: 2; }
   .save-response span { opacity: 0; display: inline-block; animation: charIn .7s cubic-bezier(.2,.7,.3,1) var(--cd) both; }
   @keyframes charIn { from { opacity: 0; transform: translateY(8px); filter: blur(3px); } to { opacity: 1; transform: none; filter: none; } }
-  .save-actions { margin-top: 42px; width: 100%; display: flex; flex-direction: column; gap: 8px; opacity: 0; }
-  .save-actions.show { animation: rise .8s ease both; }
+  /* 刚收完光的详情卡：分享是主角，留小事/结束是轻入口 */
+  .star-detail .share-big { margin-top: 14px; animation: rise .5s .25s both; }
+  .star-detail .after-save { display: flex; justify-content: space-between; align-items: center;
+    margin-top: 10px; animation: rise .5s .4s both; }
+  .star-detail .mini-link { background: none; border: none; color: var(--text-faint); font-size: 12.5px;
+    cursor: pointer; padding: 4px 0; display: inline-flex; align-items: center; gap: 4px; }
+  .star-detail .mini-link .lic { height: 14px; }
 
   /* ============ 小事种子 ============ */
   #deed-chips { margin-top: 20px; }
@@ -526,12 +531,6 @@
       <div class="save-orb" id="save-orb"></div>
       <div class="save-card" id="save-card"></div>
       <p class="save-response" id="save-response"></p>
-    </div>
-    <div class="save-actions" id="save-actions">
-      <button class="btn btn-primary" onclick="showAlbum()">看看我的光</button>
-      <button class="btn btn-ghost" onclick="openShare(lastEntry, 'screen-save')">✶ 把这片光分享出去</button>
-      <button class="btn btn-ghost" onclick="renderDeedPicker(); show('screen-deed')"><span class="dic"><svg class="lic" viewBox="0 0 24 24"><path d="M12 19.5V13"/><path d="M12 13C12 9.8 9.5 8.3 6.5 8.3c0 3.2 2.5 4.7 5.5 4.7z"/><path d="M12 13c0-3.2 2.5-4.7 5.5-4.7 0 3.2-2.5 4.7-5.5 4.7z"/></svg></span> 给明天的自己留一件小事</button>
-      <button class="btn btn-ghost" onclick="goHome()">今天就到这里</button>
     </div>
   </section>
 
@@ -1083,7 +1082,6 @@ function doSave(text, resp) {
   const star = document.getElementById('save-star');
   const glow = document.getElementById('save-glow');
   const respEl = document.getElementById('save-response');
-  const actions = document.getElementById('save-actions');
   const stage = document.querySelector('.save-stage');
 
   card.textContent = '「' + text + '」';
@@ -1091,7 +1089,6 @@ function doSave(text, resp) {
   orb.className = 'save-orb';
   star.className = 'save-star';
   glow.className = 'save-glow';
-  actions.className = 'save-actions';
   respEl.innerHTML = '';
   document.querySelectorAll('.sparkle').forEach(s => s.remove());
   show('screen-save');
@@ -1135,8 +1132,8 @@ function doSave(text, resp) {
     respEl.innerHTML = [...resp].map((ch, i) =>
       `<span style="--cd:${i * 45}ms">${ch === ' ' ? '&nbsp;' : ch}</span>`).join('');
   }, t.resp);
-  // 5) 操作浮现
-  setTimeout(() => { actions.classList.add('show'); }, t.act);
+  // 5) 光归天空：回应读完，自动飞入星图——今晚这颗星以选中态亮起，详情卡即刻在手
+  setTimeout(() => { showAlbum(lastEntry); }, t.act + (reduceMotion ? 100 : 1400));
 }
 
 // ================= 光的相册：星域 + 星座 =================
@@ -1204,7 +1201,7 @@ const HANDNOTES = {
     '这口井很深。说什么都可以，它只是听着。',
   ] },
 };
-function showAlbum() {
+function showAlbum(focusEntry) {
   const headP = document.querySelector('.album-count');
   if (futureView) {
     // 前人的天空：期许感的全部，就这两行
@@ -1320,6 +1317,8 @@ function showAlbum() {
       `--td:${(2.8 + (i % 4) * .5)}s; --tdel:${(i * 17) % 40 / 10}s"></i>`;
     b.onclick = ev => { ev.stopPropagation(); focusStar(sky, b, e, groups[e.lens || 'free']); };
     sky.appendChild(b);
+    // 刚收完光跳进来：这颗星自动进入选中态，详情卡即刻展开
+    if (e === focusEntry) setTimeout(() => focusStar(sky, b, e, groups[e.lens || 'free'], true), reduceMotion ? 0 : 500);
   });
 
   // 拾光者手记的灯：去过的星域，雾里显出一盏定定的小灯
@@ -1429,7 +1428,7 @@ function showNote(lens, hn) {
     `<p class="note-txt">「${note}」</p>` +
     '<p class="note-sign">—— 一位走过这里的拾光者</p></div>';
 }
-function focusStar(sky, b, e, group) {
+function focusStar(sky, b, e, group, justSaved) {
   const lensId = e.lens || 'free';
   sky.classList.add('focused');
   sky.querySelectorAll('.star').forEach(s => {
@@ -1438,9 +1437,9 @@ function focusStar(sky, b, e, group) {
   });
   b.classList.add('sel');
   sky.querySelectorAll('.cline').forEach(l => l.classList.toggle('kin', l.dataset.lens === lensId));
-  showStar(e, group);
+  showStar(e, group, justSaved);
 }
-function showStar(e, group) {
+function showStar(e, group, justSaved) {
   const lens = e.lens === 'deed' ? DEED_LENS : LENSES.find(l => l.id === e.lens);
   const mood = MOODS.find(m => m.id === e.mood);
   const idx = group ? group.indexOf(e) : -1;
@@ -1453,7 +1452,12 @@ function showStar(e, group) {
     (mood ? `<span>那天：${mood.label}</span>` : '') +
     (e.sample ? '<span>示例</span>' : '') + '</p>' +
     (prev ? `<p class="echo">这个星座的上一片：<b>「${prev.text}」</b> · ${prev.date}</p>` : '') +
-    `<button class="share-mini" onclick="openShare(curStar, 'screen-album')">✶ 把这片光分享出去 ›</button>`;
+    (justSaved
+      ? `<button class="btn btn-primary share-big" onclick="openShare(curStar, 'screen-album')">✶ 把这片光分享出去</button>` +
+        `<div class="after-save">` +
+        `<button class="mini-link" onclick="renderDeedPicker(); show('screen-deed')"><svg class="lic" viewBox="0 0 24 24"><path d="M12 19.5V13"/><path d="M12 13C12 9.8 9.5 8.3 6.5 8.3c0 3.2 2.5 4.7 5.5 4.7z"/><path d="M12 13c0-3.2 2.5-4.7 5.5-4.7 0 3.2-2.5 4.7-5.5 4.7z"/></svg>给明天的自己留一件小事</button>` +
+        `<button class="mini-link" onclick="goHome()">今天就到这里 ›</button></div>`
+      : `<button class="share-mini" onclick="openShare(curStar, 'screen-album')">✶ 把这片光分享出去 ›</button>`);
   curStar = e;
 }
 
