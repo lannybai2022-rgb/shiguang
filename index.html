@@ -74,10 +74,11 @@
   .brand-sub { margin-left: 8px; letter-spacing: 1.5px; font-size: 11.5px; color: var(--text-faint); }
 
   /* ---------- 每日轻语 + 理念页 ---------- */
-  .whisper-wrap { margin-bottom: 6px; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 0 12px; text-align: center; }
-  .whisper { font-family: var(--kai); color: var(--text-dim); font-size: 15px; line-height: 2; }
+  /* 中部一组是"耳语"层：存在但不抢——首页只有两个重心（心情球 / 我的天空） */
+  .whisper-wrap { margin-bottom: 4px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 0 12px; text-align: center; }
+  .whisper { font-family: var(--kai); color: var(--text-faint); font-size: 13px; line-height: 1.9; }
   .whisper::before, .whisper::after { content: "·"; color: rgba(240,194,127,.5); margin: 0 10px; }
-  .why-link { background: none; border: none; color: var(--text-faint); font-size: 12.5px;
+  .why-link { background: none; border: none; color: var(--text-faint); opacity: .8; font-size: 11.5px;
     cursor: pointer; font-family: inherit; padding: 6px 10px; transition: color .3s; }
   .why-link:active { color: var(--warm); }
   .why-body { margin-top: 20px; display: flex; flex-direction: column; gap: 18px; padding-bottom: 24px; }
@@ -180,22 +181,30 @@
   /* 首页星光：我的光直接亮在首页夜空里——不装盒子，天空没有边框 */
   .mini-sky { position: relative; display: block; width: 100%; height: 132px; margin: 2px 0 0;
     background: transparent; border: none; cursor: pointer; overflow: visible; padding: 0; }
-  .mini-sky .ms-star { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: #f5e9cf;
+  .mini-sky .ms-star { position: absolute; width: var(--sz, 8px); height: var(--sz, 8px); border-radius: 50%; background: #f5e9cf;
     box-shadow: 0 0 15px 5px var(--halo, rgba(240,194,127,.55));
     animation: starFloat var(--fd, 9s) ease-in-out infinite, twinkle var(--td, 3.4s) ease-in-out var(--tdel, 0s) infinite; }
   .mini-sky .ms-star.tonight { width: 10px; height: 10px; }
   .mini-sky .ms-star.tonight::after { content: ""; position: absolute; inset: -6px; border-radius: 50%;
     border: 1px solid rgba(240,194,127,.7); animation: tonightRing 2.6s ease-out infinite; }
-  .mini-sky .ms-dust { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: #dbe3ff; opacity: .22; }
+  .mini-sky .ms-dust { position: absolute; border-radius: 50%; background: #dbe3ff; }
+  /* 灯灵的种子：一盏常亮的小提灯——天再空，灯一直留着 */
+  .mini-sky .ms-lantern { position: absolute; right: 12%; top: 18%; width: 6px; height: 9px; border-radius: 3px;
+    background: linear-gradient(#ffe3b3, #f2a556);
+    box-shadow: 0 0 12px 4px rgba(255,183,107,.48), 0 0 26px 9px rgba(255,183,107,.17);
+    animation: msLanternBreath 5s ease-in-out infinite; }
+  .mini-sky .ms-lantern::before { content: ""; position: absolute; left: 50%; top: -3px; width: 4px; height: 2px;
+    transform: translateX(-50%); border-radius: 1px; background: #c98d4b; }
+  @keyframes msLanternBreath { 0%,100% { opacity: .72; } 50% { opacity: 1; } }
   /* 星云：最近的心情晕染成的云，垫在星光之下 */
   .mini-sky .ms-nebula { position: absolute; width: 48%; aspect-ratio: 1.55; border-radius: 50%;
     transform: translate(-50%, -50%); pointer-events: none;
     background: radial-gradient(ellipse closest-side, var(--nc), transparent 72%); }
   .mini-sky .ms-count { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%);
-    font-size: 13px; color: var(--text-dim); white-space: nowrap; }
+    font-size: 14px; color: var(--text-dim); white-space: nowrap; }
   .mini-sky .ms-count .ms-spark { color: var(--warm); }
-  .mini-sky .ms-count .n { color: var(--warm); font-family: var(--kai); font-size: 19px; margin: 0 1px;
-    text-shadow: 0 0 10px rgba(240,194,127,.55); }
+  .mini-sky .ms-count .n { color: var(--warm); font-family: var(--kai); font-size: 21px; margin: 0 1px;
+    text-shadow: 0 0 11px rgba(240,194,127,.6); }
   .mini-sky .ms-empty { position: absolute; inset: 0 0 18px; display: flex; align-items: center; justify-content: center;
     color: var(--text-faint); font-size: 13px; font-family: var(--kai); }
   .link-album { background: var(--card); border: 1px solid var(--card-border); border-radius: 99px;
@@ -204,8 +213,8 @@
   .link-album:active { border-color: rgba(240,194,127,.4); color: var(--text); }
   .link-album .spark { color: var(--warm); animation: breathe 4s ease-in-out infinite; }
   .link-album .n { color: var(--warm); }
-  .tiny-note { color: var(--text-faint); font-size: 11.5px; line-height: 1.7; text-align: center; }
-  .presence { color: var(--text-faint); font-size: 12.5px; font-family: var(--kai); }
+  .tiny-note { color: var(--text-faint); font-size: 10.5px; line-height: 1.65; text-align: center; opacity: .85; }
+  .presence { color: var(--text-faint); font-size: 11px; font-family: var(--kai); opacity: .8; }
 
   /* ============ 小事提醒卡 ============ */
   .deed-card { background: linear-gradient(135deg, rgba(240,194,127,.13), rgba(240,194,127,.03));
@@ -781,15 +790,26 @@ function renderHome() {
     { x: 82, y: 34, c: (moodCols[1] || moodCols[0] || '#d9a96c') + '20' },
   ];
   let msHtml = nebs.map(n => `<i class="ms-nebula" style="left:${n.x}%; top:${n.y}%; --nc:${n.c}"></i>`).join('');
-  for (let i = 0; i < 9; i++) msHtml += `<i class="ms-dust" style="left:${(i * 31 + 7) % 94 + 2}%; top:${(i * 53 + 19) % 78 + 8}%"></i>`;
+  // 星尘加厚：夜空本来就有满天微星，我的光是其中被点亮的——星尘永远又小又淡，亮的才是自己的
+  for (let i = 0; i < 24; i++) {
+    const dx = ((Math.sin(i * 12.9898 + 7) * .5 + .5) * 94 + 2).toFixed(1);
+    const dy = ((Math.sin(i * 78.233 + 3) * .5 + .5) * 82 + 6).toFixed(1);
+    const ds = (1.4 + (i % 3) * .5).toFixed(1);
+    msHtml += `<i class="ms-dust" style="left:${dx}%; top:${dy}%; width:${ds}px; height:${ds}px; opacity:${(.14 + (i % 4) * .07).toFixed(2)}"></i>`;
+  }
+  msHtml += '<i class="ms-lantern"></i>';
   if (!entries.length) {
     ms.innerHTML = msHtml + '<span class="ms-empty">你找到的光，会一颗颗亮在这里</span>';
   } else {
+    // 光少时向中心聚拢、颗颗更大——两三片光也要有存在感，不散在角落
+    const few = recent.length <= 3;
     recent.forEach((e, i) => {
       const mood = MOODS.find(m => m.id === e.mood);
-      const x = 6 + i * (80 / Math.max(recent.length - 1, 1)) + (i * 29) % 8;
-      const y = 12 + (i * 41 + 17) % 52;
-      msHtml += `<i class="ms-star${e.date === today && !e.sample ? ' tonight' : ''}" style="left:${x}%; top:${y}%; ` +
+      const x = few
+        ? 50 + (i - (recent.length - 1) / 2) * 19 + (i * 29) % 5
+        : 6 + i * (80 / Math.max(recent.length - 1, 1)) + (i * 29) % 8;
+      const y = few ? 28 + (i * 41 + 17) % 26 : 12 + (i * 41 + 17) % 52;
+      msHtml += `<i class="ms-star${e.date === today && !e.sample ? ' tonight' : ''}" style="left:${x}%; top:${y}%; --sz:${few ? 11 : 8}px; ` +
         `--halo:${mood ? mood.color + 'cc' : 'rgba(240,194,127,.6)'}; --fd:${8 + i % 4}s; --td:${(2.6 + i % 3 * .7)}s; --tdel:${(i * .6).toFixed(1)}s"></i>`;
     });
     ms.innerHTML = msHtml + `<span class="ms-count"><span class="ms-spark">✶</span> 我的光 · <span class="n">${entries.length}</span> 片 ›</span>`;
@@ -1464,14 +1484,35 @@ function openShare(e, from) {
   const g = c.createLinearGradient(0, 0, 0, 1000);
   g.addColorStop(0, '#070b1c'); g.addColorStop(.6, '#10152e'); g.addColorStop(1, '#1a1f3d');
   c.fillStyle = g; c.fillRect(0, 0, 750, 1000);
-  // 星云：这片光的心情色晕染 + 夜空紫 + 暖金——和产品里的天空同一套语言
-  const mc = (MOODS.find(m => m.id === e.mood) || {}).color || '#f0c27f';
-  [[190, 310, 270, hexA(mc, .24)], [570, 640, 300, 'rgba(132,120,190,.20)'], [430, 140, 230, 'rgba(240,194,127,.14)']]
-    .forEach(([nx, ny, nr, col]) => {
-      const ng = c.createRadialGradient(nx, ny, 0, nx, ny, nr);
-      ng.addColorStop(0, col); ng.addColorStop(1, 'rgba(0,0,0,0)');
-      c.fillStyle = ng; c.beginPath(); c.arc(nx, ny, nr, 0, 7); c.fill();
-    });
+  // ── 我的星图：把相册星图的实际画面画进卡片上半（星域晕/雾/标签/井/星/灯），这片光高亮带环 ──
+  const MX = px => 40 + px / 100 * 670;
+  const MY = py => 34 + py / 100 * 520;
+  const byLens = {};
+  entries.forEach(x => { const k = x.lens || 'free'; (byLens[k] = byLens[k] || []).push(x); });
+  const homeLens = e.lens || 'free';
+  c.textAlign = 'center';
+  for (const [lens, z] of Object.entries(ZONES)) {
+    const a = ANCHORS[lens]; if (!a) continue;
+    const cnt = (byLens[lens] || []).length;
+    const nx = MX(a[0]), ny = MY(a[1]);
+    let ng = c.createRadialGradient(nx, ny, 0, nx, ny, 160);
+    ng.addColorStop(0, `rgba(${z.hue},${lens === homeLens ? .3 : cnt ? .2 : .07})`);
+    ng.addColorStop(1, 'rgba(0,0,0,0)');
+    c.fillStyle = ng; c.beginPath(); c.arc(nx, ny, 160, 0, 7); c.fill();
+    if (!cnt) {
+      ng = c.createRadialGradient(nx, ny, 0, nx, ny, 130);
+      ng.addColorStop(0, 'rgba(165,178,205,.22)'); ng.addColorStop(1, 'rgba(0,0,0,0)');
+      c.fillStyle = ng; c.beginPath(); c.arc(nx, ny, 130, 0, 7); c.fill();
+    }
+    if (lens === 'free') {
+      const wg = c.createRadialGradient(nx, ny, 0, nx, ny, 16);
+      wg.addColorStop(0, 'rgba(190,215,255,.6)'); wg.addColorStop(1, 'rgba(0,0,0,0)');
+      c.fillStyle = wg; c.beginPath(); c.ellipse(nx, ny, 17, 7, 0, 0, 7); c.fill();
+    }
+    c.font = '19px "Kaiti SC","STKaiti","KaiTi",serif';
+    c.fillStyle = `rgba(207,216,239,${cnt ? .5 : .26})`;
+    c.fillText(z.label, nx, MY(a[1] + (lens === 'free' ? -9 : 12)));
+  }
   for (let i = 0; i < 64; i++) {
     const x = (i * 97 + 31) % 750, y = (i * 211 + 57) % 1000;
     c.globalAlpha = .2 + (i % 5) * .12;
@@ -1479,45 +1520,68 @@ function openShare(e, from) {
     c.beginPath(); c.arc(x, y, (i % 3) * .7 + .8, 0, 7); c.fill();
   }
   c.globalAlpha = 1;
-  // 你的星群：已收下的光，亮在卡片下方的地平线上（各自的心情色）
-  entries.filter(x => x !== e).slice(-40).forEach((x, i) => {
-    const omc = (MOODS.find(m => m.id === x.mood) || {}).color || '#f0c27f';
-    const sx = (i * 137 + 43) % 700 + 25;
-    const sy = 772 + (i * 71 + 17) % 86;
-    const sg = c.createRadialGradient(sx, sy, 0, sx, sy, 9);
-    sg.addColorStop(0, hexA(omc, .4)); sg.addColorStop(1, 'rgba(0,0,0,0)');
-    c.fillStyle = sg; c.beginPath(); c.arc(sx, sy, 9, 0, 7); c.fill();
-    c.globalAlpha = .55 + (i % 3) * .15;
-    c.fillStyle = '#f2ecd9';
-    c.beginPath(); c.arc(sx, sy, 1.5 + (i % 3) * .7, 0, 7); c.fill();
-    c.globalAlpha = 1;
-  });
-  // 那颗星：双层光晕
-  const rg2 = c.createRadialGradient(375, 235, 0, 375, 235, 235);
-  rg2.addColorStop(0, 'rgba(240,194,127,.20)'); rg2.addColorStop(1, 'rgba(240,194,127,0)');
-  c.fillStyle = rg2; c.beginPath(); c.arc(375, 235, 235, 0, 7); c.fill();
-  const rg = c.createRadialGradient(375, 235, 0, 375, 235, 150);
-  rg.addColorStop(0, 'rgba(240,194,127,.85)'); rg.addColorStop(.16, 'rgba(240,194,127,.4)'); rg.addColorStop(1, 'rgba(240,194,127,0)');
-  c.fillStyle = rg; c.beginPath(); c.arc(375, 235, 150, 0, 7); c.fill();
-  c.fillStyle = '#f5cf92'; c.beginPath(); c.arc(375, 235, 11, 0, 7); c.fill();
-  // 正文
+  // 星星：实际星域位置 + 星等；这片光放大带环
+  const nowMs = Date.now();
+  for (const [lens, list] of Object.entries(byLens)) {
+    const a = ANCHORS[lens] || [50, 45];
+    list.forEach((x, k) => {
+      const ang = k * 2.4 + lens.length;
+      let rad = k === 0 ? 0 : 3.5 + 4.2 * Math.sqrt(k);
+      if (rad > 13.5) rad = 13.5 - (k % 4) * 1.1;
+      const sx = MX(Math.min(92, Math.max(5, a[0] + Math.cos(ang) * rad * 1.2)));
+      const sy = MY(Math.min(88, Math.max(4, a[1] + Math.sin(ang) * rad)));
+      const mood = MOODS.find(m => m.id === x.mood);
+      const fresh = Math.max(0, 1 - (nowMs - new Date(x.date + 'T00:00:00')) / 86400000 / 75);
+      const isMe = x === e;
+      const hr = isMe ? 46 : 13 + 10 * fresh;
+      const hg = c.createRadialGradient(sx, sy, 0, sx, sy, hr);
+      hg.addColorStop(0, hexA((mood || {}).color || '#f0c27f', isMe ? .75 : .22 + .3 * fresh));
+      hg.addColorStop(1, 'rgba(0,0,0,0)');
+      c.fillStyle = hg; c.beginPath(); c.arc(sx, sy, hr, 0, 7); c.fill();
+      c.globalAlpha = .5 + .5 * fresh;
+      c.fillStyle = '#f5e9cf';
+      c.beginPath(); c.arc(sx, sy, isMe ? 8 : 3 + 2.5 * fresh, 0, 7); c.fill();
+      c.globalAlpha = 1;
+      if (isMe) {
+        c.strokeStyle = 'rgba(240,194,127,.8)'; c.lineWidth = 1.6;
+        c.beginPath(); c.arc(sx, sy, 15, 0, 7); c.stroke();
+      }
+    });
+  }
+  // 手记灯：去过的星域，雾里那盏定定的小灯
+  for (const lens of Object.keys(HANDNOTES)) {
+    if (!(byLens[lens] || []).length) continue;
+    const a = ANCHORS[lens];
+    const lx = MX(Math.max(5, a[0] - 9)), ly = MY(Math.min(90, a[1] + 5));
+    const lg = c.createRadialGradient(lx, ly, 0, lx, ly, 26);
+    lg.addColorStop(0, 'rgba(255,183,107,.55)'); lg.addColorStop(1, 'rgba(0,0,0,0)');
+    c.fillStyle = lg; c.beginPath(); c.arc(lx, ly, 26, 0, 7); c.fill();
+    c.fillStyle = '#c98d4b'; c.fillRect(lx - 2.5, ly - 9.5, 5, 2.6);
+    const bg2 = c.createLinearGradient(lx, ly - 7, lx, ly + 6);
+    bg2.addColorStop(0, '#ffe3b3'); bg2.addColorStop(1, '#f2a556');
+    c.fillStyle = bg2;
+    if (c.roundRect) { c.beginPath(); c.roundRect(lx - 4.5, ly - 7, 9, 13, 4); c.fill(); }
+    else c.fillRect(lx - 4.5, ly - 7, 9, 13);
+  }
+  // 正文（星图占上半，文字区在下半）
   c.textAlign = 'center';
   c.fillStyle = '#f2ede4';
-  c.font = '44px "Kaiti SC","STKaiti","KaiTi",serif';
-  const lines = wrapText(c, '「' + e.text + '」', 560);
-  let y = 470;
-  for (const ln of lines) { c.fillText(ln, 375, y); y += 70; }
+  c.font = '38px "Kaiti SC","STKaiti","KaiTi",serif';
+  const lines = wrapText(c, '「' + e.text + '」', 580);
+  let y = 648;
+  for (const ln of lines) { c.fillText(ln, 375, y); y += 58; }
   // 回应
   c.fillStyle = '#f0c27f';
-  c.font = '30px "Kaiti SC","STKaiti","KaiTi",serif';
-  y += 26;
-  for (const ln of wrapText(c, respText, 540)) { c.fillText(ln, 375, y); y += 48; }
+  c.font = '26px "Kaiti SC","STKaiti","KaiTi",serif';
+  y += 20;
+  for (const ln of wrapText(c, respText, 560)) { c.fillText(ln, 375, y); y += 42; }
   // 页脚
   c.fillStyle = 'rgba(242,237,228,.5)';
-  c.font = '24px -apple-system, "PingFang SC", sans-serif';
-  c.fillText(fmtDate(e.date) + ' · 第 ' + (entries.indexOf(e) + 1) + ' 片光', 375, 895);
+  c.font = '22px -apple-system, "PingFang SC", sans-serif';
+  c.fillText(fmtDate(e.date) + ' · 第 ' + (entries.indexOf(e) + 1) + ' 片光', 375, 928);
   c.fillStyle = 'rgba(240,194,127,.75)';
-  c.fillText('✶ 拾 光 · 发现光的练习', 375, 940);
+  c.font = '23px -apple-system, "PingFang SC", sans-serif';
+  c.fillText('✶ 拾 光 · 发现光的练习', 375, 963);
 
   const url = cv.toDataURL('image/png');
   document.getElementById('share-img').src = url;
