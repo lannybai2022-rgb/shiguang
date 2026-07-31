@@ -23,12 +23,15 @@
   html, body { height: 100%; }
   body {
     font-family: -apple-system, "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
-    background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-mid) 58%, var(--bg-low) 100%);
+    background: var(--bg-low);
     color: var(--text);
     min-height: 100dvh;
     display: flex; justify-content: center;
     overflow-x: hidden;
   }
+  /* 夜空渐变固定在视口上，内容在其上滚动——长页面不再出现渐变断层（iOS 不用 background-attachment:fixed，有兼容 bug） */
+  body::before { content: ""; position: fixed; inset: 0; z-index: -1;
+    background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-mid) 58%, var(--bg-low) 100%); }
 
   /* ============ 氛围层：星空 / 极光 / 流萤 ============ */
   #bg-stars { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
@@ -157,10 +160,11 @@
   .quick-write { margin: 18px 0 4px; display: flex; flex-direction: column; gap: 9px; }
   .qw-hint { color: var(--text-faint); font-size: 12.5px; }
   .qw-row { display: flex; gap: 8px; align-items: center; }
-  .qw-row input { flex: 1; min-width: 0; background: var(--card); border: 1px solid var(--card-border);
-    border-radius: 14px; padding: 12px 14px; color: var(--text); font-size: 15px; outline: none; font-family: inherit; }
-  .qw-row input:focus { border-color: rgba(240,194,127,.45); }
-  .qw-row input::placeholder { color: var(--text-faint); }
+  .qw-row textarea { flex: 1; min-width: 0; background: var(--card); border: 1px solid var(--card-border);
+    border-radius: 14px; padding: 12px 14px; color: var(--text); font-size: 15px; outline: none; font-family: inherit;
+    resize: none; line-height: 1.6; max-height: 96px; overflow-y: auto; }
+  .qw-row textarea:focus { border-color: rgba(240,194,127,.45); }
+  .qw-row textarea::placeholder { color: var(--text-faint); }
   .qw-mic { width: 44px; height: 44px; flex: none; border-radius: 50%; background: var(--card);
     border: 1px solid var(--card-border); cursor: pointer; display: none; align-items: center; justify-content: center; padding: 0; }
   .qw-mic.show { display: flex; }
@@ -474,7 +478,7 @@
     <div class="quick-write" data-e style="--i:3">
       <p class="qw-hint">心里已经有一句了？不用选角度，放在这里就好——</p>
       <div class="qw-row">
-        <input id="qw-input" maxlength="50" placeholder="写一句，一句就够…">
+        <textarea id="qw-input" maxlength="50" rows="1" placeholder="写一句，一句就够…"></textarea>
         <button class="qw-mic" id="qw-mic" aria-label="说一句也行"><svg class="lic" viewBox="0 0 24 24"><rect x="9.5" y="4" width="5" height="10" rx="2.5"/><path d="M6.5 11.5a5.5 5.5 0 0 0 11 0"/><path d="M12 17v3"/></svg></button>
       </div>
       <button class="btn btn-primary qw-save" id="qw-save">存下这片光</button>
@@ -668,7 +672,6 @@ const SAMPLES = [
 // ================= 状态 =================
 const LS_KEY = 'shiguang_entries_v1';
 const LS_LENS = 'shiguang_last_lens';
-const LS_DIRECT = 'shiguang_direct';   // 快轨偏好：用户自己选的"直接写"
 let entries = load();
 let cur = { mood: null, lens: null, text: '' };
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -808,16 +811,9 @@ function renderHome() {
       localStorage.setItem(LS_MOODLOG, JSON.stringify(log));
       setTimeout(() => {
         cur.quick = false;
-        renderLens(m);   // 视角页总是备好——"换个角度"随时能回来，快输直达也在它顶部
-        // 难的日子，慢慢来（接住语、旧光回响、一步不少）；还行的日子，快快记
-        // 用惯快输的人回到第二层（直输就在顶部）；常用某视角的人直进它的问题页
-        const low = m.id === 'awful' || m.id === 'bad';
-        const lastLens = LENSES.find(l => l.id === localStorage.getItem(LS_LENS));
-        if (!low && !localStorage.getItem(LS_DIRECT) && lastLens) {
-          cur.lens = lastLens.id;
-          renderFind(lastLens, { ack: m.ack });
-          show('screen-find');
-        } else show('screen-lens');
+        // 落地永远进第二层——它已是分流点：快输直达在顶、视角卡在下（真机反馈：跳层让人懵，宁可稳不要抢）
+        renderLens(m);
+        show('screen-lens');
       }, reduceMotion ? 0 : 520);
     };
     row.appendChild(b);
@@ -948,9 +944,13 @@ function renderLens(mood) {
   // 快输直达：心里已有那句，写下/说出就收，不用选角度（归"心里的话"域）
   const qwInput = document.getElementById('qw-input');
   const qwSave = document.getElementById('qw-save');
-  qwInput.value = '';
+  qwInput.value = ''; qwInput.style.height = '';
   qwSave.classList.remove('show');
-  qwInput.oninput = () => qwSave.classList.toggle('show', qwInput.value.trim().length > 0);
+  qwInput.oninput = () => {
+    qwInput.style.height = 'auto';
+    qwInput.style.height = qwInput.scrollHeight + 'px';   // 长句自动换行长高（语音一整段也放得下）
+    qwSave.classList.toggle('show', qwInput.value.trim().length > 0);
+  };
   qwSave.onclick = () => {
     cur.lens = 'free'; cur.quick = true;
     cur.text = qwInput.value.trim();
@@ -1052,14 +1052,11 @@ function pickResp() {
 }
 function doSave(text, resp) {
   lastEntry = { text, lens: cur.lens, mood: cur.mood, date: new Date().toISOString().slice(0, 10), resp };
+  entries = entries.filter(e => !e.sample);   // 第一片真实的光落下时，示例星星悄悄让位
   entries.push(lastEntry);
   persist();
-  // 路径偏好：快输的光不算"选了视角"；走引导保存则回到"记住视角"模式
-  if (cur.quick) localStorage.setItem(LS_DIRECT, '1');
-  else if (cur.lens && cur.lens !== 'deed') {
-    localStorage.removeItem(LS_DIRECT);
-    localStorage.setItem(LS_LENS, cur.lens);
-  }
+  // 快输的光不算"选了视角"，不更新"上次在这里"标记
+  if (!cur.quick && cur.lens && cur.lens !== 'deed') localStorage.setItem(LS_LENS, cur.lens);
 
   const card = document.getElementById('save-card');
   const orb = document.getElementById('save-orb');
@@ -1343,21 +1340,16 @@ function showAlbum() {
     fut.textContent = '✦ 看看一位拾光者三个月的天空 ›';
     fut.onclick = viewFutureSky;
     foot.appendChild(fut);
-    if (entries.some(e => e.sample)) {
-      const b = document.createElement('button');
-      b.className = 'btn btn-ghost'; b.style.width = 'auto';
-      b.textContent = '清除示例星星';
-      b.onclick = () => { entries = entries.filter(e => !e.sample); persist(); showAlbum(); };
-      foot.appendChild(b);
+    // 评审工具只在链接后加 #demo 时出现（正常体验不见）；示例星星在存下第一片真光时自动让位
+    if (location.hash.includes('demo')) {
+      [['演示·第一晚', 'few'], ['演示·三个月', 'many'], ['恢复', 'restore']].forEach(([t, m]) => {
+        const b = document.createElement('button');
+        b.className = 'btn btn-ghost'; b.style.cssText = 'width:auto; font-size:12px; padding:6px 10px;';
+        b.textContent = t;
+        b.onclick = () => demoFill(m);
+        foot.appendChild(b);
+      });
     }
-    // 原型评审用：极端数据演示（只改内存不落盘，"恢复"或刷新即还原）
-    [['演示·第一晚', 'few'], ['演示·三个月', 'many'], ['恢复', 'restore']].forEach(([t, m]) => {
-      const b = document.createElement('button');
-      b.className = 'btn btn-ghost'; b.style.cssText = 'width:auto; font-size:12px; padding:6px 10px;';
-      b.textContent = t;
-      b.onclick = () => demoFill(m);
-      foot.appendChild(b);
-    });
   }
   show('screen-album');
 }
@@ -1467,10 +1459,19 @@ function openShare(e, from) {
   const cv = document.createElement('canvas');
   cv.width = 750; cv.height = 1000;
   const c = cv.getContext('2d');
+  const hexA = (h, a) => { const n = parseInt(h.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; };
   // 夜空
   const g = c.createLinearGradient(0, 0, 0, 1000);
   g.addColorStop(0, '#070b1c'); g.addColorStop(.6, '#10152e'); g.addColorStop(1, '#1a1f3d');
   c.fillStyle = g; c.fillRect(0, 0, 750, 1000);
+  // 星云：这片光的心情色晕染 + 夜空紫 + 暖金——和产品里的天空同一套语言
+  const mc = (MOODS.find(m => m.id === e.mood) || {}).color || '#f0c27f';
+  [[190, 310, 270, hexA(mc, .24)], [570, 640, 300, 'rgba(132,120,190,.20)'], [430, 140, 230, 'rgba(240,194,127,.14)']]
+    .forEach(([nx, ny, nr, col]) => {
+      const ng = c.createRadialGradient(nx, ny, 0, nx, ny, nr);
+      ng.addColorStop(0, col); ng.addColorStop(1, 'rgba(0,0,0,0)');
+      c.fillStyle = ng; c.beginPath(); c.arc(nx, ny, nr, 0, 7); c.fill();
+    });
   for (let i = 0; i < 64; i++) {
     const x = (i * 97 + 31) % 750, y = (i * 211 + 57) % 1000;
     c.globalAlpha = .2 + (i % 5) * .12;
@@ -1478,7 +1479,23 @@ function openShare(e, from) {
     c.beginPath(); c.arc(x, y, (i % 3) * .7 + .8, 0, 7); c.fill();
   }
   c.globalAlpha = 1;
-  // 那颗星
+  // 你的星群：已收下的光，亮在卡片下方的地平线上（各自的心情色）
+  entries.filter(x => x !== e).slice(-40).forEach((x, i) => {
+    const omc = (MOODS.find(m => m.id === x.mood) || {}).color || '#f0c27f';
+    const sx = (i * 137 + 43) % 700 + 25;
+    const sy = 772 + (i * 71 + 17) % 86;
+    const sg = c.createRadialGradient(sx, sy, 0, sx, sy, 9);
+    sg.addColorStop(0, hexA(omc, .4)); sg.addColorStop(1, 'rgba(0,0,0,0)');
+    c.fillStyle = sg; c.beginPath(); c.arc(sx, sy, 9, 0, 7); c.fill();
+    c.globalAlpha = .55 + (i % 3) * .15;
+    c.fillStyle = '#f2ecd9';
+    c.beginPath(); c.arc(sx, sy, 1.5 + (i % 3) * .7, 0, 7); c.fill();
+    c.globalAlpha = 1;
+  });
+  // 那颗星：双层光晕
+  const rg2 = c.createRadialGradient(375, 235, 0, 375, 235, 235);
+  rg2.addColorStop(0, 'rgba(240,194,127,.20)'); rg2.addColorStop(1, 'rgba(240,194,127,0)');
+  c.fillStyle = rg2; c.beginPath(); c.arc(375, 235, 235, 0, 7); c.fill();
   const rg = c.createRadialGradient(375, 235, 0, 375, 235, 150);
   rg.addColorStop(0, 'rgba(240,194,127,.85)'); rg.addColorStop(.16, 'rgba(240,194,127,.4)'); rg.addColorStop(1, 'rgba(240,194,127,0)');
   c.fillStyle = rg; c.beginPath(); c.arc(375, 235, 150, 0, 7); c.fill();
