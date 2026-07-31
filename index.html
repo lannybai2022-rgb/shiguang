@@ -708,7 +708,7 @@ function persist() { localStorage.setItem(LS_KEY, JSON.stringify(entries)); }
 (function sky() {
   const cv = document.getElementById('bg-stars');
   const ctx = cv.getContext('2d');
-  let stars = [], meteors = [], W = 0, H = 0;
+  let stars = [], meteors = [], W = 0, H = 0, bgRaf = 0;
   function init() {
     const dpr = Math.min(devicePixelRatio || 1, 2);
     W = cv.width = innerWidth * dpr; H = cv.height = innerHeight * dpr;
@@ -741,7 +741,7 @@ function persist() { localStorage.setItem(LS_KEY, JSON.stringify(entries)); }
       ctx.globalAlpha = 1; ctx.strokeStyle = g; ctx.lineWidth = 1.4;
       ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(m.x - m.vx * 14, m.y - m.vy * 14); ctx.stroke();
     }
-    requestAnimationFrame(frame);
+    bgRaf = requestAnimationFrame(frame);
   }
   init(); addEventListener('resize', init);
   if (reduceMotion) { // 静态画一帧
@@ -750,6 +750,17 @@ function persist() { localStorage.setItem(LS_KEY, JSON.stringify(entries)); }
     frame();
     setInterval(spawnMeteor, 14000 + Math.random() * 8000);
   }
+  // 微信切后台（发小红书等）再回来，渲染层常被回收导致页面冻死：
+  // 隐藏时主动停循环降内存，回来时重建画布+重启循环；bfcache 恢复（pageshow persisted）同理
+  function restartBg() {
+    if (reduceMotion) return;
+    cancelAnimationFrame(bgRaf); meteors = []; init(); frame();
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) cancelAnimationFrame(bgRaf);
+    else restartBg();
+  });
+  window.addEventListener('pageshow', e => { if (e.persisted) restartBg(); });
   // 流萤
   if (!reduceMotion) {
     for (let i = 0; i < 3; i++) {
@@ -774,6 +785,11 @@ function show(id) {
   const el = document.getElementById(id);
   void el.offsetWidth; // 重新触发入场动画
   el.classList.add('active');
+  // 离开分享页即释放 1500×2000 大图（微信内存压力的大头，降低切后台被回收→页面冻死的概率）
+  if (id !== 'screen-share') {
+    const si = document.getElementById('share-img');
+    if (si && si.src) si.removeAttribute('src');
+  }
 }
 function goHome() {
   if (futureView) { futureView = false; entries = savedEntries || load(); }
