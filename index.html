@@ -415,6 +415,12 @@
     background: radial-gradient(circle closest-side, var(--zc), transparent 72%); }
   .zone-fog { width: 44%; aspect-ratio: 1; transition: opacity 1.2s;
     background: radial-gradient(circle closest-side, rgba(165,178,205,.75) 0%, rgba(165,178,205,.28) 48%, transparent 70%); }
+  /* 备份与恢复 */
+  #backup-input { width: 100%; min-height: 96px; background: var(--card); border: 1px solid var(--card-border);
+    border-radius: 14px; padding: 12px 14px; color: var(--text); font-size: 13px; font-family: inherit;
+    outline: none; resize: none; margin-top: 4px; }
+  #backup-input:focus { border-color: rgba(240,194,127,.45); }
+  #backup-msg { color: var(--warm); font-size: 13px; min-height: 20px; font-family: var(--kai); }
   .zone-label { position: absolute; transform: translate(-50%, -50%); pointer-events: none; z-index: 2;
     font-family: var(--kai); font-size: 11px; letter-spacing: .16em; color: #cfd8ef; white-space: nowrap;
     text-shadow: 0 1px 6px rgba(7,10,26,.95), 0 0 14px rgba(7,10,26,.8); }
@@ -490,6 +496,26 @@
       <p data-e style="--i:6">还要说一句实话：<b>我们不承诺感恩会让现实立刻变好</b>——谁承诺这个，都别信。但心会先暖起来；心暖了，人就慢慢有了做事的力气；有了力气，眼前的日子往往真的会一点点松动。有本书叫《三十六万遍感恩的奇迹》，讲的就是这个顺序。</p>
       <p data-e style="--i:7">所以，每天两三分钟：找一片光，存进星空。哪天心里暗了，回来看看——<b>这些光都是你自己找到的</b>，谁也拿不走。</p>
     </div>
+  </section>
+
+  <!-- 备份与恢复：零后台的数据安全网 -->
+  <section class="screen" id="screen-backup">
+    <div class="topbar" data-e style="--i:0">
+      <button class="back-btn" onclick="showAlbum()">‹ 回去</button>
+    </div>
+    <p class="question" data-e style="--i:1">把天空存一份</p>
+    <p class="sub" data-e style="--i:2">你的光只存在这台设备上，我们看不到、也拿不走。<br>存一份到别处，换手机、清缓存也不怕丢。</p>
+    <div class="find-actions" data-e style="--i:3">
+      <button class="btn btn-primary" onclick="copyBackup()">复制备份文本</button>
+      <button class="btn btn-ghost" onclick="downloadBackup()">下载备份文件</button>
+    </div>
+    <p class="sub" data-e style="--i:4; font-size:12.5px;">复制后发给微信"文件传输助手"或存进备忘录，就是一份备份。</p>
+    <p class="sub" data-e style="--i:5; margin-top:30px; color: var(--text);">换了设备？把备份文本粘到下面，接回你的光——两边会合并，一片都不会少。</p>
+    <textarea id="backup-input" data-e style="--i:6" placeholder="把备份文本粘贴到这里…"></textarea>
+    <div class="find-actions" data-e style="--i:7">
+      <button class="btn btn-primary" onclick="importBackup()">接回我的光</button>
+    </div>
+    <p id="backup-msg" data-e style="--i:8"></p>
   </section>
 
   <!-- 选视角 -->
@@ -1382,6 +1408,11 @@ function showAlbum(focusEntry) {
   const foot = document.getElementById('album-foot');
   foot.innerHTML = '';
   if (!futureView) {
+    const bk = document.createElement('button');
+    bk.className = 'btn btn-ghost'; bk.style.cssText = 'width:auto; font-size:12.5px; font-family:var(--kai);';
+    bk.textContent = '✦ 备份 / 恢复';
+    bk.onclick = showBackup;
+    foot.appendChild(bk);
     // 评审工具只在链接后加 #demo 时出现（正常体验不见）；示例星星在存下第一片真光时自动让位
     if (location.hash.includes('demo')) {
       [['演示·第一晚', 'few'], ['演示·三个月', 'many'], ['恢复', 'restore']].forEach(([t, m]) => {
@@ -1429,6 +1460,75 @@ function exitFutureSky() {
   showAlbum();
 }
 
+// ============ 备份与恢复：零后台的数据安全网 ============
+const BACKUP_KEYS = [LS_KEY, LS_MOODLOG, LS_CARE, LS_LENS, LS_DEED];
+function showBackup() {
+  document.getElementById('backup-msg').textContent = '';
+  document.getElementById('backup-input').value = '';
+  show('screen-backup');
+}
+function backupPayload() {
+  const data = {};
+  BACKUP_KEYS.forEach(k => { const v = localStorage.getItem(k); if (v !== null) data[k] = v; });
+  return JSON.stringify({ app: 'shiguang', v: 1, exported: new Date().toISOString().slice(0, 10), data });
+}
+async function copyBackup() {
+  const t = backupPayload(), msg = document.getElementById('backup-msg');
+  const ok = () => { msg.textContent = '已复制。发给"文件传输助手"或存进备忘录，就存好了。'; };
+  try { await navigator.clipboard.writeText(t); ok(); }
+  catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy') ? ok() : msg.textContent = '复制没成功——试试"下载备份文件"。'; }
+    catch (e2) { msg.textContent = '复制没成功——试试"下载备份文件"。'; }
+    ta.remove();
+  }
+}
+function downloadBackup() {
+  const blob = new Blob([backupPayload()], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'shiguang-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  document.getElementById('backup-msg').textContent = '备份文件已开始下载。';
+}
+function importBackup() {
+  const msg = document.getElementById('backup-msg');
+  const txt = document.getElementById('backup-input').value.trim();
+  if (!txt) { msg.textContent = '先把备份文本粘贴到上面的框里。'; return; }
+  let obj;
+  try { obj = JSON.parse(txt); } catch (e) { msg.textContent = '这段文本不是有效的备份。'; return; }
+  if (!obj || obj.app !== 'shiguang' || !obj.data) { msg.textContent = '这段文本不是拾光的备份。'; return; }
+  const d = obj.data;
+  let added = 0;
+  try {
+    // 光：按"日期+内容"合并去重，谁也不覆盖谁，一片不丢
+    const mine = entries.slice();
+    const seen = new Set(mine.map(e => e.date + '|' + e.text));
+    const theirs = JSON.parse(d[LS_KEY] || '[]');
+    for (const e of theirs) {
+      if (!e || !e.date || !e.text || e.sample) continue;
+      const k = e.date + '|' + e.text;
+      if (!seen.has(k)) { mine.push(e); seen.add(k); added++; }
+    }
+    // 有真光后，示例星退场
+    const merged = mine.some(x => !x.sample) ? mine.filter(x => !x.sample) : mine;
+    merged.sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+    entries = merged; persist();
+  } catch (e) { msg.textContent = '导入的时候出了点问题，没有改动任何数据。'; return; }
+  try {
+    // 心情打卡：{date: mood} 合并，本地优先
+    const m = { ...JSON.parse(d[LS_MOODLOG] || '{}'), ...JSON.parse(localStorage.getItem(LS_MOODLOG) || '{}') };
+    localStorage.setItem(LS_MOODLOG, JSON.stringify(m));
+  } catch (e) {}
+  [LS_CARE, LS_LENS, LS_DEED].forEach(k => {
+    if (localStorage.getItem(k) === null && d[k] != null) localStorage.setItem(k, d[k]);
+  });
+  msg.textContent = added ? '接回来了 ' + added + ' 片光。✶' : '没有新的光需要接回——两边已经一样了。';
+  renderHome();
+}
 // 原型评审用：注入极端数据看星图形态。不调用 persist()，localStorage 不受影响
 function demoFill(mode) {
   futureView = false;
