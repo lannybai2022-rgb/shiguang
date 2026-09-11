@@ -97,7 +97,7 @@
   .echo-card .eq { font-size: 13px; color: var(--text-faint); }
   .echo-card .et { font-family: var(--kai); font-size: 16px; line-height: 1.8; margin-top: 6px; color: var(--text-dim); }
   .share-preview { display: flex; justify-content: center; margin-top: 18px; }
-  .share-preview img { width: 62%; max-width: 240px; border-radius: 14px;
+  .share-preview img { width: 100%; max-width: 360px; border-radius: 14px;
     border: 1px solid var(--card-border); box-shadow: 0 10px 40px -10px rgba(0,0,0,.6); }
   .share-mini { background: none; border: none; color: var(--text-faint); font-size: 13px;
     cursor: pointer; font-family: inherit; padding: 8px 0 0; display: block; transition: color .3s; }
@@ -169,7 +169,7 @@
   .qw-row { display: flex; gap: 8px; align-items: center; }
   .qw-row textarea { flex: 1; min-width: 0; background: var(--card); border: 1px solid var(--card-border);
     border-radius: 14px; padding: 12px 14px; color: var(--text); font-size: 15px; outline: none; font-family: inherit;
-    resize: none; line-height: 1.6; max-height: 96px; overflow-y: auto; }
+    resize: vertical; line-height: 1.6; min-height: 88px; max-height: 360px; overflow-y: auto; }
   .qw-row textarea:focus { border-color: rgba(240,194,127,.45); }
   .qw-row textarea::placeholder { color: var(--text-faint); }
   .qw-mic { width: 44px; height: 44px; flex: none; border-radius: 50%; background: var(--card);
@@ -274,7 +274,7 @@
   .input-wrap { position: relative; margin-top: 14px; }
   .input-wrap textarea { width: 100%; background: var(--card); border: 1px solid var(--card-border);
     border-radius: 15px; color: var(--text); font-family: inherit; font-size: 15px; line-height: 1.6;
-    padding: 13px 16px; resize: none; height: 84px; outline: none; transition: border-color .35s, box-shadow .35s; }
+    padding: 13px 16px; resize: vertical; min-height: 160px; height: 160px; outline: none; transition: border-color .35s, box-shadow .35s; }
   .input-wrap textarea:focus { border-color: rgba(240,194,127,.45); box-shadow: 0 0 24px -8px rgba(240,194,127,.35); }
   .input-wrap textarea::placeholder { color: var(--text-faint); }
   .voice-btn { display: none; align-self: center; align-items: center; gap: 8px;
@@ -452,11 +452,106 @@
   .note-view .note-sign { color: rgba(240,194,127,.66); font-size: 12.5px; font-family: var(--kai);
     margin-top: 12px; text-align: right; animation: rise .6s .24s both; }
 
+  /* 长文始终以原文阅读，短仪式只显示开头，全文保存在星星里。 */
+  .find-writing { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+  .find-guide, .lens-intro, .lens-options, .share-visual { min-width: 0; }
+  .star-detail .txt, .deed-card .t, .echo-card .et { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .star-detail .echo { overflow-wrap: anywhere; }
+  .echo-card .et, .deed-card .t { max-height: 240px; overflow-y: auto; }
+  .save-card { overflow-wrap: anywhere; white-space: pre-wrap; }
+  .save-full-note { font-size: 12px; color: var(--text-faint); margin-top: 12px; }
+  .share-pager { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 16px; }
+  .share-pager[hidden] { display: none; }
+  .share-pager button { width: auto; padding: 10px 14px; }
+  .share-pager button:disabled { opacity: .3; cursor: default; }
+  .share-page-count { font-size: 13px; color: var(--text-dim); white-space: nowrap; }
+  .share-hint { font-size: 12.5px; text-align: center; color: var(--text-dim); line-height: 1.8; margin-top: 12px; }
+  button:focus-visible, textarea:focus-visible { outline: 2px solid var(--warm); outline-offset: 4px; }
+  textarea[aria-invalid="true"] { border-color: var(--warm); }
+  .screen > *, .star-detail { min-width: 0; }
+  .mini-sky { overflow: hidden; }
+
+  /* 同一页面随视口调整布局；宽屏给输入和回看各自的空间。 */
+  @media (min-width: 900px) {
+    #app { max-width: 1180px; padding: 40px 48px; }
+    .screen { min-height: calc(100dvh - 80px); }
+    .screen > .topbar { grid-column: 1 / -1; align-self: start; }
+    #screen-home.active { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr);
+      grid-template-rows: auto auto auto auto auto auto; column-gap: 88px; align-content: center; }
+    #screen-home > .brand, #screen-home > .greeting, #care-card, #deed-card,
+    #screen-home > .sub, #mood-orbs { grid-column: 1; }
+    #screen-home > .brand { grid-row: 1; }
+    #screen-home > .greeting { font-size: 40px; margin-top: 40px; }
+    #screen-home > .sub { font-size: 18px; margin-top: 24px; }
+    #screen-home .home-foot { grid-column: 2; grid-row: 1 / 7; margin: 0; padding: 30px 0;
+      justify-content: center; align-self: center; }
+    .mini-sky { height: 300px; margin: 20px 0; }
+    .mood-orbs { margin: 48px 0; gap: 12px; }
+    .mood-orb { width: 68px; }
+    .mood-orb .ball { width: 56px; height: 56px; }
+    .whisper { font-size: 15px; }
+    #screen-lens.active, #screen-find.active { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+      grid-template-rows: auto 1fr; column-gap: 64px; row-gap: 24px; }
+    .lens-intro, .find-guide { padding-top: 20px; }
+    .lens-options, .find-writing { padding-top: 20px; }
+    .quick-write { margin-top: 30px; gap: 12px; }
+    .qw-row { align-items: flex-start; }
+    .qw-row textarea { min-height: 260px; max-height: 520px; padding: 18px; }
+    .qw-mic { margin-top: 6px; }
+    .lens-grid { gap: 14px; }
+    .lens-card { padding: 20px; }
+    .find-writing .input-wrap { margin-top: 0; }
+    .find-writing textarea { min-height: 340px; padding: 20px; font-size: 17px; line-height: 1.9; }
+    .find-writing .find-actions { margin-top: 20px; }
+    #screen-album.active { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+      grid-template-rows: auto auto 1fr auto; column-gap: 36px; row-gap: 12px; }
+    .album-head { grid-column: 1 / -1; margin: 8px 0 4px; }
+    #sky { grid-column: 1; grid-row: 3; margin: 0; min-height: 510px; }
+    .star-detail { grid-column: 2; grid-row: 3; margin: 0; align-self: start; padding: 26px;
+      max-height: max(510px, calc(100dvh - 270px)); overflow-y: auto; }
+    .star-detail .txt { font-size: 18px; line-height: 2; }
+    .album-foot { grid-column: 1 / -1; }
+    #screen-why, #screen-backup, #screen-deed { width: 100%; max-width: 720px; margin-inline: auto; }
+    #screen-deed textarea { min-height: 220px; }
+    #screen-share.active { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr);
+      grid-template-rows: auto auto auto 1fr; column-gap: 60px; }
+    #screen-share > .question, #screen-share > .sub { grid-column: 1 / -1; }
+    .share-visual { grid-column: 1; padding: 20px 0; }
+    .share-preview img { width: 76%; max-width: 380px; }
+    #screen-share > .find-actions { grid-column: 2; align-self: center; margin-top: 0; }
+    .save-stage { max-width: 580px; min-height: 460px; }
+    .save-card { max-width: 460px; font-size: 22px; padding: 28px 34px; }
+    .why-body p { font-size: 17px; }
+    #backup-input { min-height: 220px; }
+  }
+  @media (max-width: 359px) {
+    #app { padding-inline: 16px; }
+    .mood-orb { width: 48px; }
+    .mood-orb .ball { width: 40px; height: 40px; }
+    .star-detail .after-save { align-items: flex-start; flex-direction: column; gap: 12px; }
+    .zone-label { font-size: 10px; letter-spacing: 0; }
+  }
+
   /* ============ 无障碍：减少动效 ============ */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: .01s !important; animation-iteration-count: 1 !important; transition-duration: .01s !important; }
   }
+  [hidden] { display: none !important; }
+  #screen-account { max-width: 680px; margin-inline: auto; width: 100%; }
+  .cloud-panel { border: 1px solid rgba(240,194,127,.18); border-radius: 18px; padding: 22px; margin: 24px 0; background: rgba(255,255,255,.025); }
+  .cloud-panel h2 { font-size: 18px; font-weight: 500; margin: 0 0 14px; color: var(--warm); }
+  .cloud-panel label { display: block; font-size: 14px; margin: 18px 0 8px; line-height: 1.7; }
+  .cloud-panel input:not([type=checkbox]) { display: block; width: 100%; box-sizing: border-box; border: 1px solid rgba(240,194,127,.28); border-radius: 10px; background: rgba(0,0,0,.15); color: var(--text); font: inherit; padding: 13px; }
+  .cloud-panel .find-actions { flex-wrap: wrap; gap: 12px; margin-top: 16px; }
+  .cloud-panel p, #cloud-status, #cloud-message { line-height: 1.8; overflow-wrap: anywhere; }
+  #cloud-short-status { font-size: 12px; opacity: .65; margin-top: 4px; }
+  #cloud-message { color: var(--warm); font-size: 14px; }
 </style>
+<script defer src="cloud-config.js"></script>
+<script defer src="cloud-store.js"></script>
+<script defer src="vendor/supabase.js"></script>
+<script defer src="cloud.js"></script>
+<script defer src="cloud-ui.js"></script>
 </head>
 <body>
 <canvas id="bg-stars"></canvas>
@@ -479,9 +574,40 @@
       </div>
       <p class="presence">今晚，还有很多人和你一样，在找光。</p>
       <button class="mini-sky" id="mini-sky" onclick="showAlbum()" aria-label="我的光"></button>
+      <button class="why-link" onclick="showAccount()">账号与同步</button>
+      <p id="cloud-short-status">仅保存在本机</p>
       <button class="why-link" onclick="show('screen-why')">为什么是找光 ›</button>
       <p class="tiny-note">这是一个自助练习工具，不替代专业帮助。<br>如果此刻很难撑住：24 小时心理援助热线 400-161-9995</p>
     </div>
+  </section>
+
+  <section class="screen" id="screen-account">
+    <div class="topbar"><button class="back-btn" onclick="goHome()">‹ 回去</button></div>
+    <p class="question">让光跟着你</p>
+    <p class="sub">手机和电脑，用同一套账号密码，接住同一片星空。</p>
+    <p id="cloud-status" role="status">正在准备本机记录…</p>
+    <form id="cloud-login" class="cloud-panel">
+      <h2 id="cloud-auth-title">登录账号</h2>
+      <p class="sub">登录后，新记录会同步到你的账号。本机旧记录会单独核对，由你确认是否迁移。</p>
+      <label for="cloud-email">邮箱账号</label><input id="cloud-email" type="email" autocomplete="username" autocapitalize="none" spellcheck="false" required placeholder="你的常用邮箱">
+      <label for="cloud-password">密码</label><input id="cloud-password" type="password" autocomplete="current-password" required maxlength="128" placeholder="输入账号密码">
+      <div id="cloud-confirm-field" hidden><label for="cloud-password-confirm">确认密码</label><input id="cloud-password-confirm" type="password" autocomplete="new-password" maxlength="128" placeholder="再输入一次密码"></div>
+      <p class="sub" id="cloud-password-note" style="font-size:13px;margin-top:16px">邮箱用作账号名，注册和登录无需收取验证码。请保存好密码，当前暂不支持忘记密码后自助找回。</p>
+      <div class="find-actions"><button type="submit" class="btn btn-primary" id="cloud-auth-submit">登录并同步</button><button type="button" class="btn btn-ghost" id="cloud-auth-toggle">创建新账号</button></div>
+    </form>
+    <div id="cloud-signed-in" class="cloud-panel" hidden>
+      <h2>你的账号</h2><p id="cloud-email-display"></p><p id="cloud-count"></p>
+      <div class="find-actions"><button class="btn btn-primary" id="cloud-sync">立即同步</button><button class="btn btn-ghost" id="cloud-logout">退出当前账号</button></div>
+    </div>
+    <div id="cloud-migration" class="cloud-panel" hidden>
+      <h2>接回本机旧记录</h2><p id="cloud-guest-count"></p>
+      <button class="btn btn-ghost" id="cloud-backup-guest">下载本机旧记录备份</button>
+      <label><input type="checkbox" id="cloud-consent"> 我已保存备份，并确认这些记录属于当前账号</label>
+      <button class="btn btn-primary" id="cloud-migrate" disabled>关联并同步这些记录</button>
+    </div>
+    <p id="cloud-message" role="status"></p>
+    <button class="why-link" id="cloud-open-backup">备份与恢复 ›</button>
+    <p class="sub" style="font-size:12px;margin-top:24px">未登录时，记录只保存在本机。开启同步后，记录会存入账号云端，也在这台设备保留缓存。待办小事与界面偏好暂时只保存在本机。<br>在共用设备上使用后，请退出账号并清除网站数据。</p>
   </section>
 
   <!-- 为什么是找好处 -->
@@ -506,7 +632,7 @@
       <button class="back-btn" onclick="showAlbum()">‹ 回去</button>
     </div>
     <p class="question" data-e style="--i:1">把天空存一份</p>
-    <p class="sub" data-e style="--i:2">你的光只存在这台设备上，我们看不到、也拿不走。<br>存一份到别处，换手机、清缓存也不怕丢。</p>
+    <p class="sub" data-e style="--i:2">未登录时，光只存在这台设备；开启同步后，也会存入你的账号云端。<br>再存一份备份，换设备时更安心。</p>
     <div class="find-actions" data-e style="--i:3">
       <button class="btn btn-primary" onclick="copyBackup()">复制备份文本</button>
       <button class="btn btn-ghost" onclick="downloadBackup()">下载备份文件</button>
@@ -526,18 +652,23 @@
       <button class="back-btn" onclick="show('screen-home')">‹ 返回</button>
       <div class="step-dots"><i class="on"></i><i></i><i></i></div>
     </div>
+    <div class="lens-intro">
     <p class="ack" id="mood-ack" data-e style="--i:1"></p>
     <div id="old-echo" data-e style="--i:2"></div>
     <div class="quick-write" data-e style="--i:3">
-      <p class="qw-hint">心里已经有一句了？不用选角度，放在这里就好——</p>
+      <p class="qw-hint">心里已经有想留下的了？放在这里就好。一句或一段，都可以。</p>
       <div class="qw-row">
-        <textarea id="qw-input" maxlength="50" rows="1" placeholder="写一句，一句就够…"></textarea>
+        <textarea id="qw-input" rows="3" aria-describedby="qw-counter" placeholder="写一句，或者慢慢写一段…"></textarea>
         <button class="qw-mic" id="qw-mic" aria-label="说一句也行"><svg class="lic" viewBox="0 0 24 24"><rect x="9.5" y="4" width="5" height="10" rx="2.5"/><path d="M6.5 11.5a5.5 5.5 0 0 0 11 0"/><path d="M12 17v3"/></svg></button>
       </div>
+      <p class="counter" id="qw-counter" aria-live="polite">0 / 1000</p>
       <button class="btn btn-primary qw-save" id="qw-save">存下这片光</button>
     </div>
+    </div>
+    <div class="lens-options">
     <p class="question" data-e style="--i:4">或者，今晚想从哪个角度，<br>找一找今天的光？</p>
     <div class="lens-grid" id="lens-grid"></div>
+    </div>
   </section>
 
   <!-- 找 -->
@@ -546,18 +677,22 @@
       <button class="back-btn" onclick="show('screen-lens')">‹ 换个角度</button>
       <div class="step-dots"><i class="on"></i><i class="on"></i><i></i></div>
     </div>
+    <div class="find-guide">
     <p class="ack" id="find-ack" data-e style="--i:1"></p>
     <p class="question" id="find-question" data-e style="--i:1"></p>
-    <p class="sub" id="find-sub" data-e style="--i:2">点一个，或者用自己的话说。一句就够。</p>
+    <p class="sub" id="find-sub" data-e style="--i:2">点一个，或者用自己的话写。一句或一段，都可以。</p>
     <div class="chips" id="chips"></div>
-    <div class="input-wrap" data-e style="--i:6">
-      <textarea id="free-input" placeholder="也可以写下你自己的那一句……" maxlength="80"></textarea>
     </div>
-    <div class="counter" id="counter"></div>
+    <div class="find-writing">
+    <div class="input-wrap" data-e style="--i:6">
+      <textarea id="free-input" aria-describedby="counter" placeholder="也可以写下你自己的那一句，或那一段……"></textarea>
+    </div>
+    <div class="counter" id="counter" aria-live="polite">0 / 1000</div>
     <button class="voice-btn" id="mic-btn" data-e style="--i:7"><svg class="lic" viewBox="0 0 24 24"><rect x="9.5" y="4" width="5" height="10" rx="2.5"/><path d="M6.5 11.5a5.5 5.5 0 0 0 11 0"/><path d="M12 17v3"/></svg><span id="mic-label">说一句也行</span></button>
     <div class="find-actions" data-e style="--i:8">
       <button class="btn btn-primary" id="save-btn" disabled onclick="saveEntry()">存下这片光</button>
       <button class="btn btn-ghost" onclick="noFind()">今天实在找不到</button>
+    </div>
     </div>
   </section>
 
@@ -569,6 +704,7 @@
       <div class="save-star" id="save-star"><span class="ring"></span></div>
       <div class="save-orb" id="save-orb"></div>
       <div class="save-card" id="save-card"></div>
+      <p class="save-full-note" id="save-full-note"></p>
       <p class="save-response" id="save-response"></p>
     </div>
   </section>
@@ -580,7 +716,15 @@
     </div>
     <p class="question" data-e style="--i:1">把这片光分享出去</p>
     <p class="sub" data-e style="--i:2">卡片和文案都准备好了，你只管按一下。<br>分享永远是可选的。</p>
-    <div class="share-preview" data-e style="--i:3"><img id="share-img" alt="分享卡预览"></div>
+    <div class="share-visual" data-e style="--i:3">
+      <div class="share-preview"><img id="share-img" alt="分享卡预览"></div>
+      <div class="share-pager" id="share-pager" hidden>
+        <button class="btn btn-ghost" id="share-prev" aria-label="上一张">‹ 上一张</button>
+        <span class="share-page-count" id="share-page-count" aria-live="polite"></span>
+        <button class="btn btn-ghost" id="share-next" aria-label="下一张">下一张 ›</button>
+      </div>
+      <p class="share-hint" id="share-hint"></p>
+    </div>
     <div class="find-actions" data-e style="--i:4">
       <button class="btn btn-primary" id="share-xhs">分享到小红书</button>
       <button class="btn btn-ghost" id="share-save">只保存图片</button>
@@ -598,8 +742,9 @@
     <div class="chips" id="deed-chips"></div>
     <button class="btn btn-ghost deed-swap-btn" onclick="renderDeedPicker()" data-e style="--i:6">换一批</button>
     <div class="input-wrap" data-e style="--i:7">
-      <textarea id="deed-input" placeholder="或者自己写一件小事……" maxlength="30" style="height:60px; padding-right:16px"></textarea>
+      <textarea id="deed-input" aria-describedby="deed-counter" placeholder="或者自己写一件小事……"></textarea>
     </div>
+    <p class="counter" id="deed-counter" aria-live="polite">0 / 1000</p>
     <div class="find-actions" data-e style="--i:8">
       <button class="btn btn-primary" id="deed-save-btn" disabled>就这件了</button>
     </div>
@@ -710,7 +855,13 @@ const DEED_DONE_RESP = '你看，这片光——是你自己亲手做出来的�
 const LS_DEED = 'shiguang_pending_deed';
 const LS_MOODLOG = 'shiguang_mood_log';   // 每次落地的心情：{date: moodId}
 const LS_CARE = 'shiguang_care_shown_at'; // 牵挂卡冷静期时间戳
-function getMoodLog() { try { return JSON.parse(localStorage.getItem(LS_MOODLOG)) || {}; } catch (e) { return {}; } }
+let cloudAccount = null, cloudOwner = 'guest', savingEntry = false, cloudBootFailed = false, cloudEpoch = 0;
+function prefKey(key) { return cloudAccount ? 'shiguang_' + cloudOwner + ':' + key : key; }
+function getLocal(key) { return localStorage.getItem(prefKey(key)); }
+function setLocal(key, value) { localStorage.setItem(prefKey(key), value); }
+function removeLocal(key) { localStorage.removeItem(prefKey(key)); }
+function localDate() { const d = new Date(); return [d.getFullYear(), String(d.getMonth()+1).padStart(2,'0'), String(d.getDate()).padStart(2,'0')].join('-'); }
+function getMoodLog() { try { return JSON.parse(getLocal(LS_MOODLOG)) || {}; } catch (e) { return {}; } }
 
 const SAMPLES = [
   { text: '楼下的猫今天蹭了蹭我', lens: 'small-good', mood: 'ok' },
@@ -721,6 +872,26 @@ const SAMPLES = [
 ];
 
 // ================= 状态 =================
+const MAX_ENTRY_CHARS = 1000;
+const textSegmenter = typeof Intl.Segmenter === 'function' ? new Intl.Segmenter('zh', { granularity: 'grapheme' }) : null;
+function textCharacters(text) { return textSegmenter ? Array.from(textSegmenter.segment(text), part => part.segment) : Array.from(text); }
+function characterCount(text) { return textCharacters(text).length; }
+function validEntryText(text) { return Boolean(text.trim()) && characterCount(text) <= MAX_ENTRY_CHARS; }
+function textExcerpt(text, limit) {
+  const characters = textCharacters(text);
+  return characters.length > limit ? characters.slice(0, limit).join('') + '…' : text;
+}
+function escapeText(text) {
+  return String(text).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+}
+function updateWritingState(field, count, button, hideEmpty = false) {
+  const n = characterCount(field.value);
+  count.textContent = n > MAX_ENTRY_CHARS ? `最多写 1000 字，内容还在，请稍作调整（${n} / 1000）` : `${n} / 1000`;
+  count.className = n > MAX_ENTRY_CHARS ? 'counter warn' : 'counter';
+  field.setAttribute('aria-invalid', String(n > MAX_ENTRY_CHARS));
+  button.disabled = !validEntryText(field.value);
+  if (hideEmpty) button.classList.toggle('show', Boolean(field.value.trim()));
+}
 const LS_KEY = 'shiguang_entries_v1';
 const LS_LENS = 'shiguang_last_lens';
 let entries = load();
@@ -728,13 +899,18 @@ let cur = { mood: null, lens: null, text: '' };
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 function load() {
+  if (cloudAccount) return cloudAccount.cache;
   try { const raw = localStorage.getItem(LS_KEY); if (raw) return JSON.parse(raw); } catch (e) {}
   const seeded = SAMPLES.map((s, i) => ({ ...s, sample: true,
     date: new Date(Date.now() - (SAMPLES.length - i) * 86400000).toISOString().slice(0, 10) }));
   localStorage.setItem(LS_KEY, JSON.stringify(seeded));
   return seeded;
 }
-function persist() { localStorage.setItem(LS_KEY, JSON.stringify(entries)); }
+async function persist(nextEntries = entries) {
+  if (cloudAccount) return cloudAccount.save(nextEntries.filter(e => !e.sample));
+  localStorage.setItem(LS_KEY, JSON.stringify(nextEntries));
+  return nextEntries;
+}
 
 // ================= 氛围层：Canvas 星空 + 流星 + 流萤 =================
 (function sky() {
@@ -821,7 +997,13 @@ function show(id) {
   if (id !== 'screen-share') {
     const si = document.getElementById('share-img');
     if (si && si.src) si.removeAttribute('src');
+    shareImageUrl = null;
+    document.getElementById('share-save').onclick = null;
+    document.getElementById('share-xhs').onclick = null;
+    document.getElementById('share-prev').onclick = null;
+    document.getElementById('share-next').onclick = null;
   }
+  if (id !== 'screen-save') window.scrollTo({ top: 0, behavior: 'instant' });
 }
 function goHome() {
   if (futureView) { futureView = false; entries = savedEntries || load(); }
@@ -886,7 +1068,7 @@ function renderHome() {
       cur.mood = m.id;
       const log = getMoodLog();
       log[new Date().toISOString().slice(0, 10)] = m.id;
-      localStorage.setItem(LS_MOODLOG, JSON.stringify(log));
+      setLocal(LS_MOODLOG, JSON.stringify(log));
       setTimeout(() => {
         cur.quick = false;
         // 落地永远进第二层——它已是分流点：快输直达在顶、视角卡在下（真机反馈：跳层让人懵，宁可稳不要抢）
@@ -909,7 +1091,7 @@ function renderCareCard() {
   const log = getMoodLog();
   const days = Object.keys(log).sort().slice(-7);
   const low = days.filter(d => log[d] === 'awful' || log[d] === 'bad').length;
-  const last = Number(localStorage.getItem(LS_CARE) || 0);
+  const last = Number(getLocal(LS_CARE) || 0);
   if (days.length < 5 || low < 5 || Date.now() - last < 14 * 86400000) return false;
   wrap.innerHTML =
     `<div class="care-card">` +
@@ -917,7 +1099,7 @@ function renderCareCard() {
     `<p class="ct">有些沉，不适合一个人扛。如果愿意，找个信得过的人说说；或者拨 <b>400-161-9995</b>，24 小时都有人接。这里的星空也一直在。</p>` +
     `<button class="care-ok">我知道了，谢谢牵挂</button></div>`;
   wrap.querySelector('.care-ok').onclick = () => {
-    localStorage.setItem(LS_CARE, String(Date.now()));
+    setLocal(LS_CARE, String(Date.now()));
     wrap.innerHTML = '';
     renderDeedCard();
   };
@@ -925,7 +1107,7 @@ function renderCareCard() {
 }
 
 // ================= 小事种子 =================
-function getDeed() { try { return JSON.parse(localStorage.getItem(LS_DEED)); } catch (e) { return null; } }
+function getDeed() { try { return JSON.parse(getLocal(LS_DEED)); } catch (e) { return null; } }
 function renderDeedCard() {
   const wrap = document.getElementById('deed-card');
   const deed = getDeed();
@@ -933,18 +1115,17 @@ function renderDeedCard() {
   if (!deed || deed.date === today) { wrap.innerHTML = ''; return; } // 当天留的不当天催
   wrap.innerHTML =
     `<div class="deed-card"><p class="q"><span class="dic">${ICONS.deed}</span> 上次你给自己留了一件小事：</p>` +
-    `<p class="t">${deed.text}</p><div class="row">` +
+    `<p class="t">${escapeText(deed.text)}</p><div class="row">` +
     `<button class="deed-done">做了</button>` +
     `<button class="deed-later">先放着</button>` +
-    `<button class="deed-swap">换一件</button></div></div>`;
+    `<button class="deed-swap">换一件</button></div><p class="counter deed-save-status" role="status"></p></div>`;
   wrap.querySelector('.deed-done').onclick = () => completeDeed(deed);
   wrap.querySelector('.deed-later').onclick = () => { wrap.innerHTML = ''; };
   wrap.querySelector('.deed-swap').onclick = () => { renderDeedPicker(); show('screen-deed'); };
 }
-function completeDeed(deed) {
-  localStorage.removeItem(LS_DEED);
-  cur.lens = 'deed'; cur.mood = null;
-  doSave(deed.text, DEED_DONE_RESP);
+async function completeDeed(deed) {
+  cur.lens = 'deed'; cur.mood = null; cur.quick = false;
+  if (await doSave(deed.text, DEED_DONE_RESP)) removeLocal(LS_DEED);
 }
 function renderDeedPicker() {
   const chips = document.getElementById('deed-chips');
@@ -952,7 +1133,9 @@ function renderDeedPicker() {
   const shuffled = [...DEEDS].sort(() => Math.random() - .5).slice(0, 3);
   const saveB = document.getElementById('deed-save-btn');
   const dInput = document.getElementById('deed-input');
+  const dCounter = document.getElementById('deed-counter');
   dInput.value = ''; saveB.disabled = true;
+  updateWritingState(dInput, dCounter, saveB);
   let picked = '';
   shuffled.forEach((d, i) => {
     const b = document.createElement('button');
@@ -963,6 +1146,7 @@ function renderDeedPicker() {
       chips.querySelectorAll('.chip').forEach(x => x.classList.remove('picked'));
       b.classList.add('picked');
       picked = d; dInput.value = '';
+      updateWritingState(dInput, dCounter, saveB);
       saveB.disabled = false;
     };
     chips.appendChild(b);
@@ -970,12 +1154,13 @@ function renderDeedPicker() {
   dInput.oninput = () => {
     chips.querySelectorAll('.chip').forEach(x => x.classList.remove('picked'));
     picked = dInput.value.trim();
-    saveB.disabled = picked.length === 0;
+    updateWritingState(dInput, dCounter, saveB);
   };
   saveB.onclick = () => {
-    const text = (dInput.value.trim() || picked).slice(0, 30);
-    if (!text) return;
-    localStorage.setItem(LS_DEED, JSON.stringify({ text, date: new Date().toISOString().slice(0, 10) }));
+    const text = dInput.value.trim() || picked;
+    if (!validEntryText(text)) return;
+    try { setLocal(LS_DEED, JSON.stringify({ text, date: new Date().toISOString().slice(0, 10) })); }
+    catch (error) { dCounter.textContent = '这次还没存好，内容还在。请先备份已有记录后再试。'; return; }
     goHome();
   };
 }
@@ -995,12 +1180,12 @@ function renderLens(mood) {
     const pick = pool[(d.getDate() * 7 + d.getMonth()) % pool.length];
     echoEl.innerHTML =
       `<div class="echo-card"><p class="eq">还记得吗？${fmtDate(pick.date)}的你，找到过这片光：</p>` +
-      `<p class="et">「${pick.text}」</p></div>`;
+      `<p class="et">「${escapeText(pick.text)}」</p></div>`;
   } else {
     echoEl.innerHTML = '';
   }
 
-  const last = localStorage.getItem(LS_LENS);
+  const last = getLocal(LS_LENS);
   const grid = document.getElementById('lens-grid');
   grid.classList.remove('chosen');
   grid.innerHTML = '';
@@ -1022,12 +1207,14 @@ function renderLens(mood) {
   // 快输直达：心里已有那句，写下/说出就收，不用选角度（归"心里的话"域）
   const qwInput = document.getElementById('qw-input');
   const qwSave = document.getElementById('qw-save');
+  const qwCounter = document.getElementById('qw-counter');
   qwInput.value = ''; qwInput.style.height = '';
   qwSave.classList.remove('show');
+  updateWritingState(qwInput, qwCounter, qwSave, true);
   qwInput.oninput = () => {
     qwInput.style.height = 'auto';
     qwInput.style.height = qwInput.scrollHeight + 'px';   // 长句自动换行长高（语音一整段也放得下）
-    qwSave.classList.toggle('show', qwInput.value.trim().length > 0);
+    updateWritingState(qwInput, qwCounter, qwSave, true);
   };
   qwSave.onclick = () => {
     cur.lens = 'free'; cur.quick = true;
@@ -1077,15 +1264,11 @@ function renderFind(lens, opts) {
 input.addEventListener('input', () => {
   document.querySelectorAll('#chips .chip').forEach(x => x.classList.remove('picked'));
   cur.text = input.value.trim();
-  saveBtn.disabled = cur.text.length === 0;
   updateCounter();
 });
 
 function updateCounter() {
-  const n = input.value.length;
-  if (n === 0) { counter.textContent = ''; counter.className = 'counter'; return; }
-  if (n > 50) { counter.textContent = '有点长啦——挑最想留下的那句就好（' + n + '/50）'; counter.className = 'counter warn'; }
-  else { counter.textContent = n + '/50'; counter.className = 'counter'; }
+  updateWritingState(input, counter, saveBtn);
 }
 
 // 语音输入（Web Speech API，可用才显示）——同一套识别，绑到"找"页和第二层快输两处
@@ -1121,20 +1304,42 @@ function updateCounter() {
 })();
 
 // ================= 收：仪式 =================
-function saveEntry() { doSave(cur.text.slice(0, 50), pickResp()); }
+function saveEntry() {
+  if (!validEntryText(cur.text)) return false;
+  return doSave(cur.text, pickResp());
+}
 function noFind() { cur.text = NOFIND_TEXT; doSave(NOFIND_TEXT, NOFIND_RESP); }
 function pickResp() {
   const lens = LENSES.find(l => l.id === cur.lens);
   const pool = lens ? lens.resp : [];
   return pool[Math.floor(Math.random() * pool.length)] || '这一小片光，替你收好了。';
 }
-function doSave(text, resp) {
-  lastEntry = { text, lens: cur.lens, mood: cur.mood, date: new Date().toISOString().slice(0, 10), resp };
-  entries = entries.filter(e => !e.sample);   // 第一片真实的光落下时，示例星星悄悄让位
-  entries.push(lastEntry);
-  persist();
+async function doSave(text, resp) {
+  if (cloudBootFailed) { const msg = document.querySelector('.screen.active .counter'); if (msg) msg.textContent = '本机数据库暂未打开，内容还在输入框里。请先备份已有记录，刷新后重试。'; return false; }
+  if (savingEntry || !validEntryText(text)) return false;
+  savingEntry = true;
+  const epoch = cloudEpoch;
+  const later = (fn, delay) => setTimeout(() => { if (epoch === cloudEpoch) fn(); }, delay);
+  let nextEntry = { id: crypto.randomUUID(), createdAt: new Date().toISOString(), text, lens: cur.lens, mood: cur.mood, date: localDate(), resp };
+  const nextEntries = [...entries.filter(e => !e.sample), nextEntry];
+  let stored;
+  try { stored = await persist(cloudAccount ? [nextEntry] : nextEntries); }
+  catch (error) {
+    const msg = document.querySelector('.screen.active .counter') || document.getElementById('counter');
+    msg.textContent = '这次还没存好，内容还在。请先备份已有记录后再试。';
+    savingEntry = false;
+    console.warn('[shiguang] save.failed', { reason: error.name, characters: characterCount(text) });
+    return false;
+  }
+  savingEntry = false;
+  nextEntry = stored.find(e => e.id === nextEntry.id) || nextEntry;
+  lastEntry = nextEntry;
+  entries = stored;
+  console.info('[shiguang] entry.saved', { characters: characterCount(text), total: entries.length });
   // 快输的光不算"选了视角"，不更新"上次在这里"标记
-  if (!cur.quick && cur.lens && cur.lens !== 'deed') localStorage.setItem(LS_LENS, cur.lens);
+  if (!cur.quick && cur.lens && cur.lens !== 'deed') {
+    try { setLocal(LS_LENS, cur.lens); } catch (error) { /* 正文已保存，视角偏好可下次再记。 */ }
+  }
 
   const card = document.getElementById('save-card');
   const orb = document.getElementById('save-orb');
@@ -1143,7 +1348,8 @@ function doSave(text, resp) {
   const respEl = document.getElementById('save-response');
   const stage = document.querySelector('.save-stage');
 
-  card.textContent = '「' + text + '」';
+  card.textContent = '「' + textExcerpt(text.replace(/\s+/g, ' '), 85) + '」';
+  document.getElementById('save-full-note').textContent = characterCount(text) > 85 ? '全文已收好，点开星星就能慢慢读。' : '';
   card.className = 'save-card'; card.style.opacity = '';
   orb.className = 'save-orb';
   star.className = 'save-star';
@@ -1163,11 +1369,11 @@ function doSave(text, resp) {
   });
 
   // 1) 句子凝聚（消散），光珠同时在原位亮起
-  setTimeout(() => { card.classList.add('gather'); }, t.gather);
+  later(() => { card.classList.add('gather'); }, t.gather);
   // 2) 光珠摇曳上升
-  setTimeout(() => { card.classList.add('hide'); orb.classList.add('rise'); }, t.orb);
+  later(() => { card.classList.add('hide'); orb.classList.add('rise'); }, t.orb);
   // 3) 化作星星定格：脉冲环 + 星尘迸散
-  setTimeout(() => {
+  later(() => {
     orb.classList.add('hide');
     star.classList.add('lit');
     glow.classList.add('on');
@@ -1187,12 +1393,13 @@ function doSave(text, resp) {
     }
   }, t.star);
   // 4) 回应逐字浮现
-  setTimeout(() => {
+  later(() => {
     respEl.innerHTML = [...resp].map((ch, i) =>
-      `<span style="--cd:${i * 45}ms">${ch === ' ' ? '&nbsp;' : ch}</span>`).join('');
+      `<span style="--cd:${i * 45}ms">${ch === ' ' ? '&nbsp;' : escapeText(ch)}</span>`).join('');
   }, t.resp);
   // 5) 光归天空：回应读完，自动飞入星图——今晚这颗星以选中态亮起，详情卡即刻在手
-  setTimeout(() => { showAlbum(lastEntry); }, t.act + (reduceMotion ? 100 : 1400));
+  later(() => { showAlbum(nextEntry); }, t.act + (reduceMotion ? 100 : 1400));
+  return true;
 }
 
 // ================= 光的相册：星域 + 星座 =================
@@ -1261,6 +1468,8 @@ const HANDNOTES = {
   ] },
 };
 function showAlbum(focusEntry) {
+  const albumEpoch = cloudEpoch;
+  if (focusEntry?.id) focusEntry = entries.find(e => e.id === focusEntry.id) || focusEntry;
   const headP = document.querySelector('.album-count');
   if (futureView) {
     // 前人的天空：期许感的全部，就这两行
@@ -1377,7 +1586,9 @@ function showAlbum(focusEntry) {
     b.onclick = ev => { ev.stopPropagation(); focusStar(sky, b, e, groups[e.lens || 'free']); };
     sky.appendChild(b);
     // 刚收完光跳进来：这颗星自动进入选中态，详情卡即刻展开
-    if (e === focusEntry) setTimeout(() => focusStar(sky, b, e, groups[e.lens || 'free'], true), reduceMotion ? 0 : 500);
+    if (e === focusEntry) setTimeout(() => {
+      if (albumEpoch === cloudEpoch) focusStar(sky, b, e, groups[e.lens || 'free'], true);
+    }, reduceMotion ? 0 : 500);
   });
 
   // 拾光者手记的灯：去过的星域，雾里显出一盏定定的小灯
@@ -1471,8 +1682,8 @@ function showBackup() {
 }
 function backupPayload() {
   const data = {};
-  BACKUP_KEYS.forEach(k => { const v = localStorage.getItem(k); if (v !== null) data[k] = v; });
-  return JSON.stringify({ app: 'shiguang', v: 1, exported: new Date().toISOString().slice(0, 10), data });
+  BACKUP_KEYS.forEach(k => { const v = k === LS_KEY && cloudAccount ? JSON.stringify(cloudAccount.cache) : getLocal(k); if (v !== null) data[k] = v; });
+  return JSON.stringify({ app: 'shiguang', v: 2, exported: new Date().toISOString().slice(0, 10), data });
 }
 async function copyBackup() {
   const t = backupPayload(), msg = document.getElementById('backup-msg');
@@ -1496,7 +1707,7 @@ function downloadBackup() {
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   document.getElementById('backup-msg').textContent = '备份文件已开始下载。';
 }
-function importBackup() {
+async function importBackup() {
   const msg = document.getElementById('backup-msg');
   const txt = document.getElementById('backup-input').value.trim();
   if (!txt) { msg.textContent = '先把备份文本粘贴到上面的框里。'; return; }
@@ -1506,6 +1717,11 @@ function importBackup() {
   const d = obj.data;
   let added = 0;
   try {
+    if (cloudAccount) {
+      const previous = cloudAccount.cache.length;
+      entries = await persist(JSON.parse(d[LS_KEY] || '[]'));
+      added = entries.length - previous;
+    } else {
     // 光：按"日期+内容"合并去重，谁也不覆盖谁，一片不丢
     const mine = entries.slice();
     const seen = new Set(mine.map(e => e.date + '|' + e.text));
@@ -1518,15 +1734,16 @@ function importBackup() {
     // 有真光后，示例星退场
     const merged = mine.some(x => !x.sample) ? mine.filter(x => !x.sample) : mine;
     merged.sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
-    entries = merged; persist();
+    entries = await persist(merged);
+    }
   } catch (e) { msg.textContent = '导入的时候出了点问题，没有改动任何数据。'; return; }
   try {
     // 心情打卡：{date: mood} 合并，本地优先
-    const m = { ...JSON.parse(d[LS_MOODLOG] || '{}'), ...JSON.parse(localStorage.getItem(LS_MOODLOG) || '{}') };
-    localStorage.setItem(LS_MOODLOG, JSON.stringify(m));
+    const m = { ...JSON.parse(d[LS_MOODLOG] || '{}'), ...JSON.parse(getLocal(LS_MOODLOG) || '{}') };
+    setLocal(LS_MOODLOG, JSON.stringify(m));
   } catch (e) {}
   [LS_CARE, LS_LENS, LS_DEED].forEach(k => {
-    if (localStorage.getItem(k) === null && d[k] != null) localStorage.setItem(k, d[k]);
+    if (getLocal(k) === null && d[k] != null) setLocal(k, d[k]);
   });
   msg.textContent = added ? '接回来了 ' + added + ' 片光。✶' : '没有新的光需要接回——两边已经一样了。';
   renderHome();
@@ -1575,12 +1792,12 @@ function showStar(e, group, justSaved) {
   const prev = idx > 0 ? group[idx - 1] : null;
   const detail = document.getElementById('star-detail');
   detail.innerHTML =
-    `<p class="txt">「${e.text}」</p>` +
-    `<p class="meta"><span>${e.date}</span>` +
+    `<p class="txt">「${escapeText(e.text)}」</p>` +
+    `<p class="meta"><span>${escapeText(e.date)}</span>` +
     (lens ? `<span class="mico">${ICONS[lens.id] || ''} ${lens.name}${idx >= 0 ? ' · 第 ' + (idx + 1) + ' 片' : ''}</span>` : '') +
     (mood ? `<span>那天：${mood.label}</span>` : '') +
     (e.sample ? '<span>示例</span>' : '') + '</p>' +
-    (prev ? `<p class="echo">这个星座的上一片：<b>「${prev.text}」</b> · ${prev.date}</p>` : '') +
+    (prev ? `<p class="echo">这个星座的上一片：<b>「${escapeText(textExcerpt(prev.text, 100))}」</b> · ${escapeText(prev.date)}</p>` : '') +
     (justSaved
       ? `<button class="btn btn-primary share-big" onclick="openShare(curStar, 'screen-album')">✶ 把这片光分享出去</button>` +
         `<div class="after-save">` +
@@ -1591,11 +1808,12 @@ function showStar(e, group, justSaved) {
 }
 
 // ================= 分享卡 =================
-let lastEntry = null, curStar = null, shareReturn = 'screen-home';
+let lastEntry = null, curStar = null, shareReturn = 'screen-home', shareImageUrl = null;
 
 function wrapText(c, text, maxW) {
   const lines = []; let line = '';
-  for (const ch of text) {
+  for (const ch of textCharacters(text.replace(/\r\n?/g, '\n'))) {
+    if (ch === '\n') { lines.push(line); line = ''; continue; }
     if (c.measureText(line + ch).width > maxW && line) { lines.push(line); line = ch; }
     else line += ch;
   }
@@ -1608,6 +1826,63 @@ function openShare(e, from) {
   shareReturn = from || 'screen-home';
   const lensObj = e.lens === 'deed' ? DEED_LENS : LENSES.find(l => l.id === e.lens);
   const respText = e.resp || (lensObj && lensObj.resp ? lensObj.resp[0] : '这一小片光，替你收好了。');
+  const measure = document.createElement('canvas').getContext('2d');
+  measure.font = '32px "Kaiti SC","STKaiti","KaiTi",serif';
+  const lines = wrapText(measure, '「' + e.text + '」', 580);
+  const pages = [lines.slice(0, 4)];
+  for (let start = 4; start < lines.length; start += 15) pages.push(lines.slice(start, start + 15));
+  let pageIndex = 0;
+  const render = () => {
+    shareImageUrl = renderShareCard(e, respText, pages, pageIndex);
+    const img = document.getElementById('share-img');
+    img.src = shareImageUrl;
+    img.alt = `分享卡，第 ${pageIndex + 1} 张，共 ${pages.length} 张`;
+    document.getElementById('share-prev').disabled = pageIndex === 0;
+    document.getElementById('share-next').disabled = pageIndex === pages.length - 1;
+    document.getElementById('share-page-count').textContent = `${pageIndex + 1} / ${pages.length}`;
+    document.getElementById('share-status').textContent = '';
+  };
+  document.getElementById('share-pager').hidden = pages.length === 1;
+  document.getElementById('share-hint').textContent = pages.length > 1
+    ? `全文分成了 ${pages.length} 张卡片，可翻页后逐张保存或分享。` : '';
+  document.getElementById('share-save').textContent = pages.length > 1 ? '保存这张图片' : '只保存图片';
+  document.getElementById('share-prev').onclick = () => { if (pageIndex > 0) { pageIndex--; render(); } };
+  document.getElementById('share-next').onclick = () => { if (pageIndex < pages.length - 1) { pageIndex++; render(); } };
+  const saveImg = () => {
+    if (!shareImageUrl) return;
+    const a = document.createElement('a');
+    a.download = '拾光-' + e.date + (pages.length > 1 ? '-' + (pageIndex + 1) : '') + '.png';
+    a.href = shareImageUrl; a.click();
+  };
+  document.getElementById('share-save').onclick = saveImg;
+  document.getElementById('share-xhs').onclick = async () => {
+    if (!shareImageUrl) return;
+    const imageUrl = shareImageUrl;
+    const postText = '「' + e.text + '」\n\n今晚在拾光找到的一片光 ✶\n#找好处 #暖心丸 #感恩练习 #每天一片光 #发现光的练习';
+    const statusEl = document.getElementById('share-status');
+    let copied = false;
+    try { await navigator.clipboard.writeText(postText); copied = true; } catch (error) { /* 可手动保存卡片。 */ }
+    try {
+      const blob = await (await fetch(imageUrl)).blob();
+      const file = new File([blob], 'shiguang-' + e.date + '-' + (pageIndex + 1) + '.png', { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], text: postText });
+        statusEl.textContent = copied ? '✓ 全文文案也复制好了，需要时粘贴即可' : '';
+        return;
+      }
+    } catch (error) { if (error && error.name === 'AbortError') return; }
+    saveImg();
+    statusEl.textContent = (copied ? '✓ 全文文案已复制  ' : '') + '✓ 当前卡片已开始下载，选图后即可分享。';
+    if (/iPhone|iPad|Android/i.test(navigator.userAgent)) {
+      setTimeout(() => { try { location.href = 'xhsdiscover://'; } catch (error) {} }, 800);
+    }
+  };
+  show('screen-share');
+  render();
+  console.info('[shiguang] share.prepared', { characters: characterCount(e.text), pages: pages.length });
+}
+
+function renderShareCard(e, respText, pages, pageIndex) {
 
   const cv = document.createElement('canvas');
   cv.width = 1500; cv.height = 2000;
@@ -1618,6 +1893,7 @@ function openShare(e, from) {
   const g = c.createLinearGradient(0, 0, 0, 1000);
   g.addColorStop(0, '#070b1c'); g.addColorStop(.6, '#10152e'); g.addColorStop(1, '#1a1f3d');
   c.fillStyle = g; c.fillRect(0, 0, 750, 1000);
+  if (pageIndex === 0) {
   // ── 我的星图：把相册星图的实际画面画进卡片上半（星域晕/雾/标签/井/星/灯），这片光高亮带环 ──
   const MX = px => 40 + px / 100 * 670;
   const MY = py => 34 + py / 100 * 520;
@@ -1721,61 +1997,43 @@ function openShare(e, from) {
     if (c.roundRect) { c.beginPath(); c.roundRect(lx - 4.5, ly - 7, 9, 13, 4); c.fill(); }
     else c.fillRect(lx - 4.5, ly - 7, 9, 13);
   }
-  // 正文（星图占上半，文字区在下半）
+  } else {
+    c.textAlign = 'left';
+    c.fillStyle = '#f0c27f';
+    c.font = '24px "Kaiti SC","STKaiti","KaiTi",serif';
+    c.fillText('✶ 这一片光，接着读', 85, 88);
+    c.strokeStyle = 'rgba(240,194,127,.22)';
+    c.beginPath(); c.moveTo(85, 116); c.lineTo(665, 116); c.stroke();
+  }
+  // 第一张保留星图；后续页留给正文。一次只生成当前页，全文不裁切、不缩成小字。
   c.textAlign = 'center';
   c.fillStyle = '#f2ede4';
-  c.font = '38px "Kaiti SC","STKaiti","KaiTi",serif';
-  const lines = wrapText(c, '「' + e.text + '」', 580);
-  let y = 648;
-  for (const ln of lines) { c.fillText(ln, 375, y); y += 58; }
-  // 回应
-  c.fillStyle = '#f0c27f';
-  c.font = '26px "Kaiti SC","STKaiti","KaiTi",serif';
-  y += 20;
-  for (const ln of wrapText(c, respText, 560)) { c.fillText(ln, 375, y); y += 42; }
+  c.font = '32px "Kaiti SC","STKaiti","KaiTi",serif';
+  let y = pageIndex === 0 ? 636 : 170;
+  for (const line of pages[pageIndex]) { c.fillText(line, 375, y); y += 44; }
+  if (pageIndex === pages.length - 1) {
+    c.fillStyle = '#f0c27f';
+    c.font = '24px "Kaiti SC","STKaiti","KaiTi",serif';
+    y += 4;
+    const responseLines = wrapText(c, respText, 610);
+    const available = Math.max(1, Math.floor((904 - y) / 32) + 1);
+    responseLines.slice(0, available).forEach((line, i) => {
+      c.fillText(line + (i === available - 1 && responseLines.length > available ? '…' : ''), 375, y);
+      y += 32;
+    });
+  }
   // 页脚
   c.fillStyle = 'rgba(242,237,228,.5)';
   c.font = '22px -apple-system, "PingFang SC", sans-serif';
-  c.fillText(fmtDate(e.date) + ' · 第 ' + (entries.indexOf(e) + 1) + ' 片光', 375, 928);
+  c.fillText(fmtDate(e.date) + ' · 第 ' + (entries.indexOf(e) + 1) + ' 片光' +
+    (pages.length > 1 ? ` · ${pageIndex + 1}/${pages.length}` : ''), 375, 928);
   c.fillStyle = 'rgba(240,194,127,.75)';
   c.font = '23px -apple-system, "PingFang SC", sans-serif';
   c.fillText('✶ 拾 光 · 发现光的练习', 375, 963);
 
   const url = cv.toDataURL('image/png');
-  document.getElementById('share-img').src = url;
-  const postText = '「' + e.text + '」\n\n今晚在拾光找到的一片光 ✶\n#找好处 #暖心丸 #感恩练习 #每天一片光 #发现光的练习';
-  const statusEl = document.getElementById('share-status');
-  statusEl.textContent = '';
-  const saveImg = () => {
-    const a = document.createElement('a');
-    a.download = '拾光-' + e.date + '.png'; a.href = url; a.click();
-  };
-  const copyText = async () => {
-    try { await navigator.clipboard.writeText(postText); return true; } catch (err) { return false; }
-  };
-
-  document.getElementById('share-save').onclick = saveImg;
-
-  // 一键分享：能走系统分享面板就带图直达小红书；否则自动"存图+复制+唤起"
-  document.getElementById('share-xhs').onclick = async () => {
-    const copied = await copyText();
-    try {
-      const blob = await (await fetch(url)).blob();
-      const file = new File([blob], 'shiguang-' + e.date + '.png', { type: 'image/png' });
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], text: postText });
-        statusEl.textContent = copied ? '✓ 文案也复制好了，需要时粘贴即可' : '';
-        return;
-      }
-    } catch (err) { if (err && err.name === 'AbortError') return; }
-    // 降级：一个动作替用户做完三件事
-    saveImg();
-    statusEl.textContent = (copied ? '✓ 文案已复制  ' : '') + '✓ 卡片已保存\n打开小红书，选图、粘贴，就好了';
-    if (/iPhone|iPad|Android/i.test(navigator.userAgent)) {
-      setTimeout(() => { try { location.href = 'xhsdiscover://'; } catch (err) {} }, 800);
-    }
-  };
-  show('screen-share');
+  cv.width = 0; cv.height = 0;
+  return url;
 }
 
 // ================= 启动 =================
