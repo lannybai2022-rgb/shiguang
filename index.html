@@ -800,6 +800,11 @@ const LENSES = [
     chips: ['今天出门了', '把拖着的事做了一点', '好好吃了一顿饭', '洗了澡，收拾了自己', '撑过了今天',
       '回了一条拖着的消息', '把一件东西放回了原位'],
     resp: ['很小，但是你亲手做到的。', '一步，也是往前走。'] },
+  { id: 'trust',       name: '相信=臣服', hint: '允许当下，松开对结果的紧抓',
+    qs: ['此刻，有什么事，\n可以先松开一点，\n不急着要一个结果？', '今天有没有一刻，\n你愿意相信，\n让事情慢慢展开？'],
+    chips: ['先把结果放一放', '允许今天就是这样', '还有些事可以慢慢来', '松开一点对自己的要求',
+      '做眼前能做的一点', '暂时没有答案也可以', '给未知留一点空间'],
+    resp: ['先让这一刻如它所是。', '能做的慢慢做，暂时握不住的先放一放。'] },
   { id: 'someone-ok',  name: '有人对我还行', hint: '哪怕只是没有为难你',
     qs: ['今天有没有谁对你还行——\n哪怕只是没有为难你？', '今天，谁让你觉得\n没那么孤单——哪怕一小下？'],
     chips: ['有人好好跟我说了句话', '有人给我让了让路', '店员或司机态度还行', '今天没有人为难我',
@@ -845,6 +850,7 @@ const ICONS = {
   'not-bad':      '<svg class="lic" viewBox="0 0 24 24"><path d="M4 16.5h16"/><path d="M8.2 16.5a3.8 3.8 0 0 1 7.6 0"/><path d="M12 9.5V7.2M7 11.2 5.6 9.8M17 11.2l1.4-1.4"/></svg>',
   'small-good':   '<svg class="lic" viewBox="0 0 24 24"><path d="M6.5 11h9.5v3.5a4 4 0 0 1-4 4h-1.5a4 4 0 0 1-4-4z"/><path d="M16 12h1.3a1.9 1.9 0 0 1 0 3.8H16"/><path d="M9.4 8c0-.9.7-1.1.7-2M12.6 8c0-.9.7-1.1.7-2"/></svg>',
   'i-did':        '<svg class="lic" viewBox="0 0 24 24"><ellipse cx="8.6" cy="8.8" rx="2.1" ry="3" transform="rotate(-12 8.6 8.8)"/><ellipse cx="15.4" cy="15.4" rx="2.1" ry="3" transform="rotate(12 15.4 15.4)"/></svg>',
+  'trust':        '<svg class="lic" viewBox="0 0 24 24"><path d="M4 14c2-1 4-.6 6 1l2 1h5a1.5 1.5 0 0 1 0 3H9l-5-2"/><path d="M12 4v5M9.5 6.5h5M8 11l1 1M16 11l-1 1"/></svg>',
   'someone-ok':   '<svg class="lic" viewBox="0 0 24 24"><circle cx="12" cy="7" r="2.2"/><path d="M12 3.2v-1M8.6 5.6 7.9 4.9M15.4 5.6l.7-.7"/><path d="M5.5 15.5c2-1.2 3.6-1.2 5.2 0l1.6 1.2h4.2a1.4 1.4 0 0 1 0 2.8H9.8"/></svg>',
   'thank-person': '<svg class="lic" viewBox="0 0 24 24"><path d="M12 18.5s-5.8-3.6-5.8-7.6A3.3 3.3 0 0 1 12 8.6a3.3 3.3 0 0 1 5.8 2.3c0 4-5.8 7.6-5.8 7.6z"/></svg>',
   'others-hard':  '<svg class="lic" viewBox="0 0 24 24"><path d="M9.8 11.5h4.4V18a1.2 1.2 0 0 1-1.2 1.2h-2A1.2 1.2 0 0 1 9.8 18z"/><path d="M12 8.8c1.3-1 1.3-2.4 0-3.6-1.3 1.2-1.3 2.6 0 3.6z"/><path d="M7 19.2h10"/></svg>',
@@ -1406,7 +1412,7 @@ async function doSave(text, resp) {
 // 星域按"视线由近及远"排布：脚边(下) → 身边 → 路上 → 街上 → 心里 → 远方(上)
 // 练习久了回看星图，星星从脚边一路长到远方——地图就是来路
 const ANCHORS = {
-  'not-bad': [32, 80], 'small-good': [60, 68], 'i-did': [20, 56], 'deed': [43, 60],
+  'not-bad': [32, 80], 'small-good': [60, 68], 'i-did': [20, 56], 'trust': [18, 30], 'deed': [43, 60],
   'someone-ok': [74, 46], 'thank-person': [40, 33], 'others-hard': [57, 14], 'free': [85, 85],
 };
 
@@ -1415,6 +1421,7 @@ const ZONES = {
   'not-bad':      { hue: '96,116,152',  label: '过得去' },
   'small-good':   { hue: '150,190,205', label: '小小的好' },
   'i-did':        { hue: '120,175,150', label: '一小步' },
+  'trust':        { hue: '165,160,210', label: '相信=臣服' },
   'deed':         { hue: '120,175,150', label: '小事种子' },
   'someone-ok':   { hue: '225,185,120', label: '有人对我还行' },
   'thank-person': { hue: '240,175,110', label: '想谢谢一个人' },
@@ -1444,6 +1451,11 @@ const HANDNOTES = {
     '今天把桌上的外卖盒扔了。就这一件事。但空出来的那一块桌面，看着舒服。',
     '闹钟响第三遍的时候，起来了。虽然晚，但起来了。',
     '给自己煮了碗面，还卧了个蛋。吃完想，我还是会照顾自己的。',
+  ] },
+  'trust': { notes: [
+    '出门时发现下雨，原本的散步计划改成在屋檐下听雨。今天先按今天的样子过。',
+    '等回复的时候又刷新了几次，后来把手机翻了个面。水烧开了，先给自己倒一杯。',
+    '盆里的小苗还没发芽。我浇了一点水，把花盆放回窗边，剩下的让它慢慢来。',
   ] },
   'someone-ok': { notes: [
     '便利店阿姨多塞给我一包纸巾，说看我像感冒了。出门走了两步，眼睛有点酸。也许我最近太缺这个了。',
@@ -1642,7 +1654,7 @@ function showAlbum(focusEntry) {
 // 三个月的天空：80 片光的预置数据（"前人的天空"与评审演示共用；日期止于昨天——前人的天空没有"今晚"）
 function makePreset80() {
   const now = Date.now();
-  const lenses = ['not-bad', 'small-good', 'i-did', 'someone-ok', 'thank-person', 'others-hard', 'free', 'deed'];
+  const lenses = ['not-bad', 'small-good', 'i-did', 'trust', 'someone-ok', 'thank-person', 'others-hard', 'free', 'deed'];
   const moods = ['awful', 'bad', 'meh', 'ok', 'good', 'meh', 'ok', 'bad', 'good', 'ok'];
   const texts = ['今天总算过完了', '晒到了一会儿太阳', '把拖着的事做了一点', '地铁上有人让了让路',
     '朋友回了我消息', '妈妈其实也很累', '谢谢这个安静的夜晚', '下楼走了 5 分钟',
@@ -1650,7 +1662,9 @@ function makePreset80() {
   const arr = [];
   for (let i = 0; i < 80; i++) {
     const d = new Date(now - (80 - i) * 1.1 * 86400000);
-    arr.push({ text: texts[(i * 5 + 2) % texts.length], lens: lenses[(i * 3 + Math.floor(i / 8)) % lenses.length],
+    const lens = lenses[(i * 3 + Math.floor(i / 8)) % lenses.length];
+    const pool = lens === 'trust' ? LENSES.find(l => l.id === 'trust').chips : texts;
+    arr.push({ text: pool[(i * 5 + 2) % pool.length], lens,
       mood: moods[(i * 7 + 1) % moods.length], date: d.toISOString().slice(0, 10) });
   }
   return arr;
