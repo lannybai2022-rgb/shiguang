@@ -7,6 +7,7 @@
 <meta name="theme-color" content="#0d1330">
 <link rel="apple-touch-icon" href="icon-lamp2.png">
 <link rel="icon" type="image/png" href="icon-lamp2.png">
+<link rel="stylesheet" href="fonts/long-cang/long-cang.css">
 <title>拾光 · 发现光的练习</title>
 <!-- 匿名访问统计（GoatCounter）：只记"有人来过"，无 cookie、不识别个人、碰不到任何用户写的内容 -->
 <script data-goatcounter="https://shiguang.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
@@ -24,11 +25,14 @@
     --card-border: rgba(255, 255, 255, 0.09);
     --card-active: rgba(240, 194, 127, 0.13);
     --kai: "Kaiti SC", "STKaiti", "KaiTi", serif;
+    /* 用户自己写下的字用手写体；字体按需分片加载，没加载到时退回楷体 */
+    --hand: "Long Cang", "Kaiti SC", "STKaiti", "KaiTi", serif;
+    --sans: -apple-system, "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { height: 100%; }
   body {
-    font-family: -apple-system, "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+    font-family: var(--sans);
     background: var(--bg-low);
     color: var(--text);
     min-height: 100dvh;
@@ -95,7 +99,7 @@
   .echo-card { background: var(--card); border: 1px solid var(--card-border); border-radius: 16px;
     padding: 14px 18px; margin-top: 16px; }
   .echo-card .eq { font-size: 13px; color: var(--text-faint); }
-  .echo-card .et { font-family: var(--kai); font-size: 16px; line-height: 1.8; margin-top: 6px; color: var(--text-dim); }
+  .echo-card .et { font-family: var(--hand); font-size: 18px; line-height: 1.8; margin-top: 6px; color: var(--text-dim); }
   .share-preview { display: flex; justify-content: center; margin-top: 18px; }
   .share-preview img { width: 100%; max-width: 360px; border-radius: 14px;
     border: 1px solid var(--card-border); box-shadow: 0 10px 40px -10px rgba(0,0,0,.6); }
@@ -168,10 +172,10 @@
   .qw-hint { color: var(--text-faint); font-size: 12.5px; }
   .qw-row { display: flex; gap: 8px; align-items: center; }
   .qw-row textarea { flex: 1; min-width: 0; background: var(--card); border: 1px solid var(--card-border);
-    border-radius: 14px; padding: 12px 14px; color: var(--text); font-size: 15px; outline: none; font-family: inherit;
+    border-radius: 14px; padding: 12px 14px; color: var(--text); font-size: 18px; outline: none; font-family: var(--hand);
     resize: vertical; line-height: 1.6; min-height: 88px; max-height: 360px; overflow-y: auto; }
   .qw-row textarea:focus { border-color: rgba(240,194,127,.45); }
-  .qw-row textarea::placeholder { color: var(--text-faint); }
+  .qw-row textarea::placeholder { color: var(--text-faint); font-family: var(--sans); font-size: 15px; }
   .qw-mic { width: 44px; height: 44px; flex: none; border-radius: 50%; background: var(--card);
     border: 1px solid var(--card-border); cursor: pointer; display: none; align-items: center; justify-content: center; padding: 0; }
   .qw-mic.show { display: flex; }
@@ -273,10 +277,10 @@
     color: var(--warm); font-size: 13px; animation: rise .4s both; }
   .input-wrap { position: relative; margin-top: 14px; }
   .input-wrap textarea { width: 100%; background: var(--card); border: 1px solid var(--card-border);
-    border-radius: 15px; color: var(--text); font-family: inherit; font-size: 15px; line-height: 1.6;
+    border-radius: 15px; color: var(--text); font-family: var(--hand); font-size: 18px; line-height: 1.6;
     padding: 13px 16px; resize: vertical; min-height: 160px; height: 160px; outline: none; transition: border-color .35s, box-shadow .35s; }
   .input-wrap textarea:focus { border-color: rgba(240,194,127,.45); box-shadow: 0 0 24px -8px rgba(240,194,127,.35); }
-  .input-wrap textarea::placeholder { color: var(--text-faint); }
+  .input-wrap textarea::placeholder { color: var(--text-faint); font-family: var(--sans); font-size: 15px; }
   .voice-btn { display: none; align-self: center; align-items: center; gap: 8px;
     background: var(--card); border: 1px solid var(--card-border); border-radius: 99px;
     padding: 11px 22px; color: var(--text-dim); font-size: 14px; font-family: inherit;
@@ -308,7 +312,7 @@
     border-radius: 50%; background: radial-gradient(circle, rgba(240,194,127,.14), transparent 65%);
     opacity: 0; transition: opacity 1.6s; pointer-events: none; }
   .save-glow.on { opacity: 1; }
-  .save-card { font-family: var(--kai); font-size: 19px; line-height: 1.9;
+  .save-card { font-family: var(--hand); font-size: 21px; line-height: 1.9;
     background: var(--card); border: 1px solid var(--card-border); border-radius: 18px;
     padding: 22px 26px; max-width: 320px; color: var(--text); position: relative; z-index: 2;
     animation: cardIn .9s cubic-bezier(.2,.7,.3,1) both; }
@@ -403,12 +407,12 @@
   .star.sel i { transform: scale(calc(var(--sc, 1) * 1.9)); box-shadow: 0 0 20px 7px var(--halo, rgba(240,194,127,.6)); }
   .star-detail { background: var(--card); border: 1px solid var(--card-border); border-radius: 18px;
     padding: 18px 20px; margin-top: 14px; min-height: 100px; }
-  .star-detail .txt { font-family: var(--kai); font-size: 17px; line-height: 1.85; animation: rise .5s both; }
+  .star-detail .txt { font-family: var(--hand); font-size: 19px; line-height: 1.85; animation: rise .5s both; }
   .star-detail .meta { color: var(--text-faint); font-size: 12px; margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap; animation: rise .5s .1s both; }
   .star-detail .placeholder { color: var(--text-faint); font-size: 14px; line-height: 1.8; }
   .star-detail .echo { color: var(--text-faint); font-size: 13px; line-height: 1.7; margin-top: 9px;
     font-family: var(--kai); animation: rise .5s .15s both; }
-  .star-detail .echo b { color: var(--text-dim); font-weight: normal; }
+  .star-detail .echo b { color: var(--text-dim); font-weight: normal; font-family: var(--hand); font-size: 15px; }
   .album-foot { display: flex; justify-content: center; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
 
   /* ============ 星域:气质色晕 + 雾 + 标签 + 井 + 手记灯 ============ */
@@ -501,7 +505,7 @@
     .lens-grid { gap: 14px; }
     .lens-card { padding: 20px; }
     .find-writing .input-wrap { margin-top: 0; }
-    .find-writing textarea { min-height: 340px; padding: 20px; font-size: 17px; line-height: 1.9; }
+    .find-writing textarea { min-height: 340px; padding: 20px; font-size: 20px; line-height: 1.9; }
     .find-writing .find-actions { margin-top: 20px; }
     #screen-album.active { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
       grid-template-rows: auto auto 1fr auto; column-gap: 36px; row-gap: 12px; }
@@ -509,7 +513,7 @@
     #sky { grid-column: 1; grid-row: 3; margin: 0; min-height: 510px; }
     .star-detail { grid-column: 2; grid-row: 3; margin: 0; align-self: start; padding: 26px;
       max-height: max(510px, calc(100dvh - 270px)); overflow-y: auto; }
-    .star-detail .txt { font-size: 18px; line-height: 2; }
+    .star-detail .txt { font-size: 20px; line-height: 2; }
     .album-foot { grid-column: 1 / -1; }
     #screen-why, #screen-backup, #screen-deed { width: 100%; max-width: 720px; margin-inline: auto; }
     #screen-deed textarea { min-height: 220px; }
@@ -520,7 +524,7 @@
     .share-preview img { width: 76%; max-width: 380px; }
     #screen-share > .find-actions { grid-column: 2; align-self: center; margin-top: 0; }
     .save-stage { max-width: 580px; min-height: 460px; }
-    .save-card { max-width: 460px; font-size: 22px; padding: 28px 34px; }
+    .save-card { max-width: 460px; font-size: 24px; padding: 28px 34px; }
     .why-body p { font-size: 17px; }
     #backup-input { min-height: 220px; }
   }
@@ -1824,24 +1828,41 @@ function showStar(e, group, justSaved) {
 // ================= 分享卡 =================
 let lastEntry = null, curStar = null, shareReturn = 'screen-home', shareImageUrl = null;
 
+// 避头尾：句读与闭合符号不落在行首（挂在上一行末尾，可略超出），开引号不留在行尾（带到下一行）。
+const NO_LINE_START = /^[，。、；：？！,.;:?!）)》」』”’〉】…—~～%]$/;
+const NO_LINE_END = /[（(《「『“‘〈【]$/;
 function wrapText(c, text, maxW) {
   const lines = []; let line = '';
   for (const ch of textCharacters(text.replace(/\r\n?/g, '\n'))) {
     if (ch === '\n') { lines.push(line); line = ''; continue; }
-    if (c.measureText(line + ch).width > maxW && line) { lines.push(line); line = ch; }
+    if (c.measureText(line + ch).width > maxW && line && !NO_LINE_START.test(ch)) {
+      let carry = '';
+      while (NO_LINE_END.test(line) && line.length > 1) { carry = line.slice(-1) + carry; line = line.slice(0, -1); }
+      lines.push(line); line = carry + ch;
+    }
     else line += ch;
   }
   if (line) lines.push(line);
   return lines;
 }
 
+const HAND_CANVAS_FONT = '"Long Cang","Kaiti SC","STKaiti","KaiTi",serif';
+// 分享卡用 Canvas 绘制，必须先把正文需要的手写体分片加载完；网络慢时最多等一会儿，退回楷体也能出图。
 function openShare(e, from) {
   if (!e) return;
+  const wait = document.fonts ? document.fonts.load('32px ' + HAND_CANVAS_FONT, e.text) : Promise.resolve();
+  const timeout = new Promise(resolve => setTimeout(() => resolve('timeout'), 2500));
+  Promise.race([wait.then(() => 'loaded', () => 'failed'), timeout]).then(result => {
+    if (result !== 'loaded') console.info('[shiguang] share.font', { result });
+    openShareNow(e, from);
+  });
+}
+function openShareNow(e, from) {
   shareReturn = from || 'screen-home';
   const lensObj = e.lens === 'deed' ? DEED_LENS : LENSES.find(l => l.id === e.lens);
   const respText = e.resp || (lensObj && lensObj.resp ? lensObj.resp[0] : '这一小片光，替你收好了。');
   const measure = document.createElement('canvas').getContext('2d');
-  measure.font = '32px "Kaiti SC","STKaiti","KaiTi",serif';
+  measure.font = '32px ' + HAND_CANVAS_FONT;
   const lines = wrapText(measure, '「' + e.text + '」', 580);
   const pages = [lines.slice(0, 4)];
   for (let start = 4; start < lines.length; start += 15) pages.push(lines.slice(start, start + 15));
@@ -2022,7 +2043,7 @@ function renderShareCard(e, respText, pages, pageIndex) {
   // 第一张保留星图；后续页留给正文。一次只生成当前页，全文不裁切、不缩成小字。
   c.textAlign = 'center';
   c.fillStyle = '#f2ede4';
-  c.font = '32px "Kaiti SC","STKaiti","KaiTi",serif';
+  c.font = '32px ' + HAND_CANVAS_FONT;
   let y = pageIndex === 0 ? 636 : 170;
   for (const line of pages[pageIndex]) { c.fillText(line, 375, y); y += 44; }
   if (pageIndex === pages.length - 1) {
